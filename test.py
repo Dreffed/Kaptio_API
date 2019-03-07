@@ -19,12 +19,27 @@ urls = [
     {"name":"Items", "version":"v1.0", "suburl":"items", "params":[""], "method":"GET"},
     {"name":"Items", "version":"v2.0", "suburl":"items", "params":[""], "method":"GET"},
     {"name":"Items Item", "version":"v1.0", "suburl":"items", "query":["{itemId}"], "method":"GET"},
-    {"name":"Items Inventory", "version":"v1.0", "suburl":"items", "query":["{itemId}", "inventory"], "method":"POST"},
+    {"name":"Items Inventory", "version":"v1.0", "suburl":"items", "query":["{itemId}", "inventory"], "body":["item_option_id", "date_from", "date_to", "channel_id", "pacakge_id", "account_id", "flex_days"], "method":"POST"},
     {"name":"Items Inventory Many", "version":"", "suburl":"", "params":[""], "method":""},
-    {"name":"", "version":"", "suburl":"", "params":[""], "method":""},
-    {"name":"", "version":"", "suburl":"", "params":[""], "method":""},
-    {"name":"", "version":"", "suburl":"", "params":[""], "method":""},
-    {"name":"", "version":"", "suburl":"", "params":[""], "method":""}
+    {"name":"", "version":"", "suburl":"", "method":""},
+    {"name":"", "version":"", "suburl":"", "method":""},
+    {"name":"", "version":"", "suburl":"", "method":""},
+    {"name":"", "version":"", "suburl":"", "method":""},
+    {"name":"", "version":"", "suburl":"", "method":""},
+    {"name":"", "version":"", "suburl":"", "method":""},
+    {"name":"", "version":"", "suburl":"", "method":""},
+    {"name":"", "version":"", "suburl":"", "method":""},
+    {"name":"", "version":"", "suburl":"", "method":""},
+    {"name":"", "version":"", "suburl":"", "method":""},
+    {"name":"", "version":"", "suburl":"", "method":""},
+    {"name":"", "version":"", "suburl":"", "method":""},
+    {"name":"", "version":"", "suburl":"", "method":""},
+    {"name":"", "version":"", "suburl":"", "method":""},
+    {"name":"", "version":"", "suburl":"", "method":""},
+    {"name":"", "version":"", "suburl":"", "method":""},
+    {"name":"", "version":"", "suburl":"", "method":""},
+    {"name":"", "version":"", "suburl":"", "method":""},
+    {"name":"", "version":"", "suburl":"", "method":""}
 ]
 
 headers = {'Authorization': 'Keypair key={} secret={}'.format(settings['auth']['key'], settings['auth']['secret'])}

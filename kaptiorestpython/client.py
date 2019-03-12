@@ -32,7 +32,7 @@ def load_kaptioconfig(kaptio_config_file):
         settings['api']['auth']['key'] = "<KEY>"
         settings['api']['auth']['secret'] = "<SECRET>"
 
-        with open(kaptio_config_file, "w") as f:  
+        with open(kaptio_config_file, "w") as f:
             json.dump(settings, f, indent=4)
         
     # load this into
@@ -105,12 +105,13 @@ class KaptioClient:
         return data
 
     def save_response(self, savepath, base_name, resp, field_name):
+        timestamp = datetime.now().strftime("%Y%m%d%h%M%S")
         json_data = json.loads(resp.text)
         suffix_name = field_name
         if field_name in json_data:
             suffix_name = json_data[field_name]
         
-        json_path = os.path.join(savepath, "data", "{}_{}.json".format(base_name,suffix_name))
+        json_path = os.path.join(savepath, "data", "{}_{}_{}.json".format(base_name,suffix_name, timestamp))
         save_json(json_path, json_data)
         return json_data
 
@@ -120,6 +121,7 @@ class KaptioClient:
         
     def get_channels(self, savepath):
         url_data = {}
+        timestamp = datetime.now().strftime("%Y%m%d%h%M%S")
         url_data['name'] = "Channels"
         url_data['version'] = 'v2.0'
         url_data['suburl'] = 'channels'
@@ -129,7 +131,7 @@ class KaptioClient:
 
         data = self.api_list(url_data, paramstr, querystr)
         print("found: {}".format(len(data)))
-        file_path = os.path.join(savepath, "data", "kt_channels.json")
+        file_path = os.path.join(savepath, "data", "kt_channels_{}.json".format(timestamp))
         save_json(file_path, data)
         return data
 
@@ -169,6 +171,7 @@ class KaptioClient:
 
     def get_packages(self, savepath):
         # build out all the packages
+        timestamp = datetime.now().strftime("%Y%m%d%h%M%S")
         url_data = {}
         url_data['name'] = "All packages"
         url_data['version'] = 'v2.0'
@@ -179,7 +182,7 @@ class KaptioClient:
 
         data = self.api_list( url_data, paramstr, querystr)
         print("found: {}".format(len(data)))
-        file_path = os.path.join(savepath, "data", "kt_packages.json")
+        file_path = os.path.join(savepath, "data", "kt_packages_{}.json".format(timestamp))
         save_json(file_path, data)
         return data
         
@@ -281,6 +284,7 @@ class KaptioClient:
 
     def get_items(self, savepath):
         # get all the items
+        timestamp = datetime.now().strftime("%Y%m%d%h%M%S")
         url_data = {}
         url_data['name'] = "All items"
         url_data['version'] = 'v2.0'
@@ -291,12 +295,14 @@ class KaptioClient:
 
         data = self.api_list( url_data, paramstr, querystr)
         print("found: {}".format(len(data)))
-        file_path = os.path.join(data, "data", "kt_items.json")
+        file_path = os.path.join(data, "data", "kt_items_{}.json".format(timestamp))
         save_json(file_path, data)
         return data
 
     def get_servicelevels(self, savepath):
         # get all the servicelevels
+        timestamp = datetime.now().strftime("%Y%m%d%h%M%S")
+
         url_data = {}
         url_data['name'] = "All Servicelevels"
         url_data['version'] = 'v2.0'
@@ -307,7 +313,7 @@ class KaptioClient:
 
         data = self.api_list( url_data, paramstr, querystr)
         print("found: {}".format(len(data)))
-        file_path = os.path.join(savepath, "data", "kt_servicelevels.json")
+        file_path = os.path.join(savepath, "data", "kt_servicelevels_{}.json".format(timestamp))
         save_json(file_path, data)
 
     def get_langauages(self, savepath):
@@ -329,6 +335,8 @@ class KaptioClient:
                         occupancy = '1=1,0', services = 'a7r4F0000000AloQAE', debug=False):
         data = []
         errors = []
+        timestamp = datetime.now().strftime("%Y%m%d%h%M%S")
+        
         search_values = {
             "tax_profile_id":taxprofileid,  # Required    #Zero
             "channel_id":channelid,         # Required    # travel agent
@@ -370,7 +378,7 @@ class KaptioClient:
                 else:
                     data.append(d)
         if debug:
-            filepath = os.path.join(savepath, "data", "fn_get_packageprice.json")
+            filepath = os.path.join(savepath, "data", "fn_get_price_{}.json".format(timestamp))
             json_msg = {
                 "packageid":packageid,
                 "query": querystr,
@@ -421,7 +429,6 @@ class KaptioClient:
                             data['errors'] = 0
                         data['errors'] += len(pricelist['errors'])
                     c_count += 1
-            break
 
         print("\tCalls:{}".format(c_count))
         return data
@@ -429,7 +436,8 @@ class KaptioClient:
     def process_package_worker(self, savepath, toprocess, tax_profiles, occupancy, processed, debug=False):
         # build a list of Packages
         s_count = 0
-        
+        timestamp = datetime.now().strftime("%Y%m%d%h%M%S")
+
         while True:
             try:
                 package = toprocess.get_nowait()
@@ -442,7 +450,7 @@ class KaptioClient:
                     return
 
                 s_count += 1
-                file_path = os.path.join(savepath, "data", "kt_packages_{}.json".format(package['id']))
+                file_path = os.path.join(savepath, "data", "kt_packages_{}_{}.json".format(package['id'], timestamp))
 
                 package['services'] = ""
                 package['direction'] = ""
@@ -501,7 +509,8 @@ class KaptioClient:
         e_count = 0
         s_time = time()
         print("{}:{} => {} {} [{}]".format(p_count, s_count, l_count, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 0))
-        
+        timestamp = datetime.now().strftime("%Y%m%d%h%M%S")
+
         data = {}
         for p in packages:
             p_count += 1
@@ -509,7 +518,7 @@ class KaptioClient:
                 if p['name'].lower().startswith('test'):
                     continue
                 s_count += 1
-                file_path = os.path.join(savepath, "data", "kt_package_{}.json".format(p['id']))
+                file_path = os.path.join(savepath, "data", "kt_package_{}_{}.json".format(p['id'], timestamp))
 
                 p['services'] = ""
                 p['direction'] = ""

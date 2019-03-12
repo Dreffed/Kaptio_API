@@ -108,11 +108,15 @@ if 'pricelist' in data:
 else:
     # do a short load....
     tax_profiles = {
-        "Zero Rated":"a8H4F0000003tsfUAA"
+        "Zero Rated":"a8H4F0000003tsfUAA",
+        "Foreign":"a8H4F0000003uJbUAI",
+        "Domestic":"a8H4F0000003tnfUAA"
     }
     occupancy = {
         "single":"1=1,0",
-        "double":"1=2,0"
+        "double":"1=2,0",
+        "triple":"1=3,0",
+        "quad":"1=4,0"    
     }
     # run the pricelist load...
     kt_pricelist = kt.get_extract(savepath, kt_packages, tax_profiles, occupancy, debug)
@@ -127,20 +131,14 @@ for p in kt_packages:
         if 'id' in kt_pricelist:
             p['pricelist'] = kt_pricelist[p['id']]
 
-file_path = os.path.join(savepath, "data", "kt_pricelist.json".format())
+file_path = os.path.join(savepath, "data", "kt_pricelist_{}.json".format(timestamp))
 save_json(file_path, kt_pricelist)
 
-file_path = os.path.join(savepath, "data", "kt_packages_aug.json")
+file_path = os.path.join(savepath, "data", "kt_packages_aug_{}.json".format(timestamp))
 save_json(file_path, kt_packages)
 
 """
 # short list for proof
-tax_profiles = {
-    "Zero Rated":"a8H4F0000003tsfUAA"
-}
-occupancy = {
-    "single":"1=1,0"
-}
 
 s_dates = list(sorted(kt_dates))[:1]
 print("Calls per package: {}".format(len(tax_profiles) * len(occupancy) * len(s_dates)))

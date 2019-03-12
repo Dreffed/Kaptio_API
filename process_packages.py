@@ -1,5 +1,6 @@
 # load the dependancies
-from kaptiorestpython import KaptioClient, load_kaptioconfig, save_json
+from kaptiorestpython.client import KaptioClient, load_kaptioconfig
+from utils import get_pickle_data, save_pickle_data, save_json
 import json
 import pickle
 import os
@@ -17,17 +18,18 @@ print(savepath)
 
 kaptio_config_file = os.path.join(savepath, "config", "kaptio_settings.json")
 kaptio_config = load_kaptioconfig(kaptio_config_file)
-headers = {'Authorization': 'Keypair key={} secret={}'.format(kaptio_config['api']['auth']['key'], 
-                                                                kaptio_config['api']['auth']['secret']),
-          "Content-Type":"application/json"}
 
 debug = True
 baseurl = kaptio_config['api']['baseurl']
+
+kt = KaptioClient(baseurl, kaptio_config['api']['auth']['key'], kaptio_config['api']['auth']['secret'])
 
 pickle_file = "kaptio_allsell.pickle"
 data = get_pickle_data(pickle_file)
 
 packageid = 'a754F0000000A30QAE'
+timestamp = datetime.now().strftime("%Y%m%d%h%M%S")
+print("Timestamp: {}".format(timestamp))
 
 if 'tax_profiles' in data:
     tax_profiles = data['tax_profiles']
@@ -52,8 +54,8 @@ else:
         "triple_2child":"1=1,2",
         "quad":"1=4,0",
         "quad_1child":"1=3,1",
-        "quad_1child":"1=2,2",
-        "quad_1child":"1=1,3"
+        "quad_2child":"1=2,2",
+        "quad_3child":"1=1,3"
     }
     data['occupancy'] = occupancy
 
@@ -65,7 +67,7 @@ else:
         "channel_id":'a6H4F0000000DkMUAU',            # Required    # travel agent
         "currency":"CAD",                             # Required
         "occupancy":"1=1,0",                          # Required
-        "service_level_ids":"a7r4F0000000AloQAE", #,a7r4F0000004fd2QAA,a7r4F0000004nVbQAI
+        "service_level_ids":"a7r4F0000000AloQAE",     #,a7r4F0000004fd2QAA,a7r4F0000004nVbQAI
         "date_from":"2020-03-01",
         "date_to":"2020-10-31",
         "mode":"all",
@@ -84,14 +86,14 @@ season_end = data['season']['end']
 if 'packages' in data:
     kt_packages = data['packages']
 else:
-    kt_packages = get_packages(headers, savepath, baseurl)
-    print("\tFetched packages".format(len(kt_packages)))
+    kt_packages = kt.get_packages(savepath)
+    print("\tFetched packages [{}]".format(len(kt_packages)))
     data['packages'] = kt_packages
 
 for p in kt_packages:
     if not 'dates' in p:
         print("Fetching dates...{} => {}".format(p['id'], p['name']))
-        p['dates'] = get_packagedepartures(headers, savepath, baseurl, p['id'], season_start, season_end)    
+        p['dates'] = kt.get_packagedepartures(savepath, p['id'], season_start, season_end)    
     
     # deal wit hteh custom fields
     for key, value in p['custom_fields'].items():
@@ -109,10 +111,11 @@ else:
         "Zero Rated":"a8H4F0000003tsfUAA"
     }
     occupancy = {
-        "single":"1=1,0"
+        "single":"1=1,0",
+        "double":"1=2,0"
     }
     # run the pricelist load...
-    kt_pricelist = get_extract(headers, savepath, baseurl, kt_packages, tax_profiles, occupancy, debug)
+    kt_pricelist = kt.get_extract(savepath, kt_packages, tax_profiles, occupancy, debug)
     data['pricelist'] = kt_pricelist
 
 data['packages'] = kt_packages
@@ -124,7 +127,7 @@ for p in kt_packages:
         if 'id' in kt_pricelist:
             p['pricelist'] = kt_pricelist[p['id']]
 
-file_path = os.path.join(savepath, "data", "kt_pricelist.json")
+file_path = os.path.join(savepath, "data", "kt_pricelist.json".format())
 save_json(file_path, kt_pricelist)
 
 file_path = os.path.join(savepath, "data", "kt_packages_aug.json")

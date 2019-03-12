@@ -6,6 +6,8 @@ from datetime import datetime
 from kaptiorestpython.helper.http_lib import HttpLib
 from kaptiorestpython.helper.exceptions import APIException
 from utils import save_json
+from multiprocessing import Lock, Process, Queue, current_process
+import queue
 
 def has_empty_warning(result):
     if 'result' not in result \
@@ -54,16 +56,16 @@ class KaptioClient:
     auth_secret = None
     headers = None
 
-    def __init__(self, baseurl, auth_key, auth_secret, headers):
+    def __init__(self, baseurl, auth_key, auth_secret):
         assert(baseurl is not None)
         assert(auth_key is not None)
         assert(auth_secret is not None)
-        assert(headers is not None)
 
         self.baseurl = baseurl
         self.auth_key = auth_key
         self.auth_secret = auth_secret
-        self.headers = headers
+        self.headers = {'Authorization': 'Keypair key={} secret={}'.format(auth_key, auth_secret),
+          "Content-Type":"application/json"}
 
     def api_data(self, url_data, paramstr ="", querystr = "", body = None):
         thisurl = 'http://{}/{}/{}{}{}'.format(self.baseurl, url_data['version'], url_data['suburl'], paramstr, querystr)
@@ -427,7 +429,6 @@ class KaptioClient:
     def process_package_worker(self, savepath, toprocess, tax_profiles, occupancy, processed, debug=False):
         # build a list of Packages
         s_count = 0
-        s_time = time()
         
         while True:
             try:
@@ -452,17 +453,17 @@ class KaptioClient:
                 if 'custom_fields' in package:
                     if 'direction' in package['custom_fields']:
                         package['direction'] = package['custom_fields']['direction']
-                    if 'product_code' in p['custom_fields']:
+                    if 'product_code' in package['custom_fields']:
                         package['product_code'] = package['custom_fields']['product_code']
 
-                package['pricelist'] = walk_package(savepath, package['id'], 
+                package['pricelist'] = self.walk_package(savepath, package['id'], 
                                 dates=package['dates'], tax_profiles=tax_profiles, occupancy=occupancy, 
                                 services=package['service_levels'], debug=True)
 
                 processed.put(package)
                 save_json(file_path, package)        
 
-    def process_packages_pool(self, savepath, packages, worker_count = 5, limit=0, debug = True):
+    def process_packages_pool(self, savepath, packages, tax_profiles, occupancy, worker_count = 5, limit=0, debug = True):
         worker_count = 5
 
         p_toprocess = Queue()
@@ -478,7 +479,8 @@ class KaptioClient:
         
         for w in range(worker_count):
             try:
-                worker = Process(target=process_package_worker, args=(savepath, p_toprocess, tax_profiles, occupancy, p_processed, debug))
+                worker = Process(target=self.process_package_worker, args=(savepath, p_toprocess, tax_profiles, occupancy, p_processed, debug))
+                workers.append(worker)
             except Exception as ex:
                 print(ex)
                 

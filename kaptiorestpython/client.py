@@ -471,8 +471,7 @@ class KaptioClient:
                 processed.put(package)
                 save_json(file_path, package)        
 
-    def process_packages_pool(self, savepath, packages, tax_profiles, occupancy, worker_count = 5, limit=0, debug = True):
-        worker_count = 5
+    def process_packages_pool(self, savepath, packages, tax_profiles, occupancy, worker_count=5, limit=0, debug=True):
 
         p_toprocess = Queue()
         p_processed = Queue()

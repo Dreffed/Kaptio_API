@@ -1,4 +1,3 @@
-# load the dependancies
 from kaptiorestpython.client import KaptioClient, load_kaptioconfig
 from utils import get_pickle_data, save_pickle_data, save_json, scanfiles
 import json
@@ -9,8 +8,6 @@ import pandas as pd
 import requests
 from time import time
 from datetime import datetime
-from multiprocessing import Lock, Process, Queue, current_process
-import queue
 
 datapaths = ["C:/", "Users", "David Gloyn-Cox", "OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
 savepath = os.path.join(*datapaths)
@@ -24,7 +21,7 @@ baseurl = kaptio_config['api']['baseurl']
 
 kt = KaptioClient(baseurl, kaptio_config['api']['auth']['key'], kaptio_config['api']['auth']['secret'])
 
-pickle_file = "kaptio_allsell.pickle"
+pickle_file = "kaptio_bilkloader.pickle"
 data = get_pickle_data(pickle_file)
 
 packageid = 'a754F0000000A30QAE'
@@ -136,17 +133,3 @@ save_json(file_path, kt_pricelist)
 
 file_path = os.path.join(savepath, "data", "kt_packages_aug_{}.json".format(timestamp))
 save_json(file_path, kt_packages)
-
-"""
-# short list for proof
-
-s_dates = list(sorted(kt_dates))[:1]
-print("Calls per package: {}".format(len(tax_profiles) * len(occupancy) * len(s_dates)))
-
-kt_augpackages = get_extract(headers, savepath, baseurl, kt_packages, s_dates, tax_profiles, occupancy)
-for key, value in kt_augpackages.items():
-    print(key)
-"""
-
-data['packages'] = kt_packages
-save_pickle_data(data, pickle_file)

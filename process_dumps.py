@@ -1,9 +1,9 @@
 from utils import get_pickle_data, save_pickle_data, save_json, scanfiles
 import os
 
-datapaths = ["c:/", "Users", "David Gloyn-Cox", "OneDrive - Great Canadian Railtour Co", "Jupyter_NB", "data"]
-savepath = os.path.join(*datapaths)
-print(savepath)
+homepath = os.path.expanduser("~")
+datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
+savepath = os.path.join(homepath, *datapaths)
 
 filter_str = "[a-zA-Z_]*.json"
 

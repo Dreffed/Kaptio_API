@@ -7,9 +7,9 @@ import path
 from time import time
 from datetime import datetime
 
-datapaths = ["C:/", "Users", "David Gloyn-Cox", "OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
-savepath = os.path.join(*datapaths)
-print(savepath)
+homepath = os.path.expanduser("~")
+datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
+savepath = os.path.join(homepath, *datapaths)
 
 kaptio_config_file = os.path.join(savepath, "config", "kaptio_settings.json")
 kaptio_config = load_kaptioconfig(kaptio_config_file)

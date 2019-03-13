@@ -1,4 +1,4 @@
-from time import time
+from time import time, sleep
 import json
 import os
 import requests
@@ -105,7 +105,7 @@ class KaptioClient:
         return data
 
     def save_response(self, savepath, base_name, resp, field_name):
-        timestamp = datetime.now().strftime("%Y%m%d%h%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         json_data = json.loads(resp.text)
         suffix_name = field_name
         if field_name in json_data:
@@ -121,7 +121,7 @@ class KaptioClient:
         
     def get_channels(self, savepath):
         url_data = {}
-        timestamp = datetime.now().strftime("%Y%m%d%h%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         url_data['name'] = "Channels"
         url_data['version'] = 'v2.0'
         url_data['suburl'] = 'channels'
@@ -171,7 +171,7 @@ class KaptioClient:
 
     def get_packages(self, savepath):
         # build out all the packages
-        timestamp = datetime.now().strftime("%Y%m%d%h%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         url_data = {}
         url_data['name'] = "All packages"
         url_data['version'] = 'v2.0'
@@ -284,7 +284,7 @@ class KaptioClient:
 
     def get_items(self, savepath):
         # get all the items
-        timestamp = datetime.now().strftime("%Y%m%d%h%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         url_data = {}
         url_data['name'] = "All items"
         url_data['version'] = 'v2.0'
@@ -301,7 +301,7 @@ class KaptioClient:
 
     def get_servicelevels(self, savepath):
         # get all the servicelevels
-        timestamp = datetime.now().strftime("%Y%m%d%h%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
         url_data = {}
         url_data['name'] = "All Servicelevels"
@@ -335,7 +335,7 @@ class KaptioClient:
                         occupancy = '1=1,0', services = 'a7r4F0000000AloQAE', debug=False):
         data = []
         errors = []
-        timestamp = datetime.now().strftime("%Y%m%d%h%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         
         search_values = {
             "tax_profile_id":taxprofileid,  # Required    #Zero
@@ -436,7 +436,7 @@ class KaptioClient:
     def process_package_worker(self, savepath, toprocess, tax_profiles, occupancy, processed, debug=False):
         # build a list of Packages
         s_count = 0
-        timestamp = datetime.now().strftime("%Y%m%d%h%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
         while True:
             try:
@@ -483,21 +483,37 @@ class KaptioClient:
             p_toprocess.put(p)
             if limit > 0 and count > limit:
                 break
-        
+
+        if debug:
+            print("added {} packages to queue".format(count))
+            
         for w in range(worker_count):
             try:
                 worker = Process(target=self.process_package_worker, args=(savepath, p_toprocess, tax_profiles, occupancy, p_processed, debug))
+                worker.start()
                 workers.append(worker)
             except Exception as ex:
                 print(ex)
-                
+        
+        sleep(1)
+
         for w in workers:
             w.join()
-            
-        kt_processed = []
-        while not p_processed.empty():
-            kt_processed.append(p_processed.get())
 
+        sleep(1)
+        p_toprocess.close()
+        p_toprocess.join_thread()
+
+        kt_processed = []
+        count = 0
+        while not p_processed.empty():
+            count += 1
+            kt_processed.append(p_processed.get())
+            if count % 10 == 0:
+                sleep(0.1)
+        p_processed.close()
+        p_processed.join_thread()      
+        
         print(len(kt_processed))
         return kt_processed
 
@@ -508,7 +524,7 @@ class KaptioClient:
         e_count = 0
         s_time = time()
         print("{}:{} => {} {} [{}]".format(p_count, s_count, l_count, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 0))
-        timestamp = datetime.now().strftime("%Y%m%d%h%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
         data = {}
         for p in packages:

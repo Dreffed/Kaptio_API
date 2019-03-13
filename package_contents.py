@@ -1,11 +1,10 @@
 from kaptiorestpython.client import KaptioClient, load_kaptioconfig
+from kaptiorestpython.ograph import KaptioOGraph
 from utils import get_pickle_data, save_pickle_data, save_json, scanfiles
 import json
 import pickle
 import os
 import path
-import pandas as pd
-import requests
 from time import time
 from datetime import datetime
 
@@ -17,119 +16,43 @@ kaptio_config_file = os.path.join(savepath, "config", "kaptio_settings.json")
 kaptio_config = load_kaptioconfig(kaptio_config_file)
 
 debug = True
-baseurl = kaptio_config['api']['baseurl']
+baseurl = kaptio_config['ograph']['baseurl']
+username = kaptio_config['sf']['username']
+password = kaptio_config['sf']['passwd']
+security_token = kaptio_config['sf']['token']
+sandbox = True
+clientid = kaptio_config['ograph']['clientid']
+clientsecret = kaptio_config['ograph']['clientsecret']
 
-kt = KaptioClient(baseurl, kaptio_config['api']['auth']['key'], kaptio_config['api']['auth']['secret'])
+kt = KaptioOGraph(baseurl, username, password, security_token, sandbox, clientid, clientsecret)
 
-pickle_file = "kaptio_bilkloader.pickle"
+pickle_file = "kaptio_allsell.pickle"
 data = get_pickle_data(pickle_file)
 
+print("Available items:")
+for key, value in data.items():
+    print("\t{}".format(key))
+
 packageid = 'a754F0000000A30QAE'
-timestamp = datetime.now().strftime("%Y%m%d%h%M%S")
+timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 print("Timestamp: {}".format(timestamp))
 
-if 'tax_profiles' in data:
-    tax_profiles = data['tax_profiles']
-else:
-    # set up walker elements
-    tax_profiles = {
-        "Zero Rated":"a8H4F0000003tsfUAA",
-        "Foreign":"a8H4F0000003uJbUAI",
-        "Domestic":"a8H4F0000003tnfUAA"
-    }
-    data['tax_profiles'] = tax_profiles
-
-if 'occupancy' in data:
-    occupancy = data['occupancy']
-else:
-    occupancy = {
-        "single":"1=1,0",
-        "double":"1=2,0",
-        "double_child":"1=1,1",
-        "triple":"1=3,0",
-        "triple_1child":"1=2,1",
-        "triple_2child":"1=1,2",
-        "quad":"1=4,0",
-        "quad_1child":"1=3,1",
-        "quad_2child":"1=2,2",
-        "quad_3child":"1=1,3"
-    }
-    data['occupancy'] = occupancy
-
-if 'search_values' in data:
-    search_values = data['search_values']
-else:
-    search_values = {
-        "tax_profile_id":"a8H4F0000003tsfUAA",        # Required    #Zero
-        "channel_id":'a6H4F0000000DkMUAU',            # Required    # travel agent
-        "currency":"CAD",                             # Required
-        "occupancy":"1=1,0",                          # Required
-        "service_level_ids":"a7r4F0000000AloQAE",     #,a7r4F0000004fd2QAA,a7r4F0000004nVbQAI
-        "date_from":"2020-03-01",
-        "date_to":"2020-10-31",
-        "mode":"all",
-        "filter":"id=={}".format(packageid)
-    }
-    data['search_values'] = search_values
-
-if not 'season' in data:
-    data['season'] = {}
-    data['season']['start'] = '2020-04-01'
-    data['season']['end'] = '2020-10-31'
-
+tax_profiles = data['tax_profiles']
+occupancy = data['occupancy']
+search_values = data['search_values']
 season_start = data['season']['start']
 season_end = data['season']['end']
+kt_packages = data['packages']
 
-if 'packages' in data:
-    kt_packages = data['packages']
+kt_content = {}
+if not 'content' in data:
+    for p in kt_packages:
+        # get the content
+        if not p['id'] in kt_content:
+            kt_content[p['id']] = kt.get_content(p['id'])
+    data['content'] = kt_content
+    save_pickle_data(data, pickle_file)
 else:
-    kt_packages = kt.get_packages(savepath)
-    print("\tFetched packages [{}]".format(len(kt_packages)))
-    data['packages'] = kt_packages
+    kt_content = data['content']
 
-for p in kt_packages:
-    if not 'dates' in p:
-        print("Fetching dates...{} => {}".format(p['id'], p['name']))
-        p['dates'] = kt.get_packagedepartures(savepath, p['id'], season_start, season_end)    
-    
-    # deal wit hteh custom fields
-    for key, value in p['custom_fields'].items():
-        if not key in p:
-            p[key] = value
-
-data['packages'] = kt_packages
-save_pickle_data(data, pickle_file)
-
-if 'pricelist' in data:
-    kt_pricelist = data['pricelist']
-else:
-    # do a short load....
-    tax_profiles = {
-        "Zero Rated":"a8H4F0000003tsfUAA",
-        "Foreign":"a8H4F0000003uJbUAI",
-        "Domestic":"a8H4F0000003tnfUAA"
-    }
-    occupancy = {
-        "single":"1=1,0",
-        "double":"1=2,0",
-        "triple":"1=3,0",
-        "quad":"1=4,0"    
-    }
-    # run the pricelist load...
-    kt_pricelist = kt.get_extract(savepath, kt_packages, tax_profiles, occupancy, debug)
-    data['pricelist'] = kt_pricelist
-
-data['packages'] = kt_packages
-save_pickle_data(data, pickle_file)
-
-# augment the kt_rpicelist with the pricelist info
-for p in kt_packages:
-    if not 'pricelist' in p:
-        if 'id' in kt_pricelist:
-            p['pricelist'] = kt_pricelist[p['id']]
-
-file_path = os.path.join(savepath, "data", "kt_pricelist_{}.json".format(timestamp))
-save_json(file_path, kt_pricelist)
-
-file_path = os.path.join(savepath, "data", "kt_packages_aug_{}.json".format(timestamp))
-save_json(file_path, kt_packages)
+print("Found content for {}".format(len(kt_content)))

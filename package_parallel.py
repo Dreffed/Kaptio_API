@@ -16,6 +16,7 @@ kaptio_config = load_kaptioconfig(kaptio_config_file)
 
 debug = True
 baseurl = kaptio_config['api']['baseurl']
+packageid = ''
 
 kt = KaptioClient(baseurl, kaptio_config['api']['auth']['key'], kaptio_config['api']['auth']['secret'])
 
@@ -93,7 +94,8 @@ kt_pricelist = kt.process_packages_pool(savepath=savepath,
                     occupancy=occupancy, 
                     worker_count=10, 
                     limit=0,
-                    debug=False)
+                    debug=True)
+
 for item in kt_pricelist:
     print(item['id'], item['name'])
 

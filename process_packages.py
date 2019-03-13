@@ -5,12 +5,8 @@ import json
 import pickle
 import os
 import path
-import pandas as pd
-import requests
 from time import time
 from datetime import datetime
-from multiprocessing import Lock, Process, Queue, current_process
-import queue
 
 datapaths = ["C:/", "Users", "David Gloyn-Cox", "OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
 savepath = os.path.join(*datapaths)
@@ -28,7 +24,7 @@ pickle_file = "kaptio_allsell.pickle"
 data = get_pickle_data(pickle_file)
 
 packageid = 'a754F0000000A30QAE'
-timestamp = datetime.now().strftime("%Y%m%d%h%M%S")
+timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 print("Timestamp: {}".format(timestamp))
 
 if 'tax_profiles' in data:
@@ -48,16 +44,22 @@ else:
     occupancy = {
         "single":"1=1,0",
         "double":"1=2,0",
-        "double_child":"1=1,1",
         "triple":"1=3,0",
+        "quad":"1=4,0"
+
+    }
+
+    child_occupancy = {
+        "double_child":"1=1,1",
         "triple_1child":"1=2,1",
         "triple_2child":"1=1,2",
-        "quad":"1=4,0",
         "quad_1child":"1=3,1",
         "quad_2child":"1=2,2",
         "quad_3child":"1=1,3"
     }
+
     data['occupancy'] = occupancy
+    data['occupancy_child'] = child_occupancy
 
 if 'search_values' in data:
     search_values = data['search_values']
@@ -83,6 +85,8 @@ if not 'season' in data:
 season_start = data['season']['start']
 season_end = data['season']['end']
 
+save_pickle_data(data, pickle_file)
+
 if 'packages' in data:
     kt_packages = data['packages']
 else:
@@ -103,50 +107,8 @@ for p in kt_packages:
 data['packages'] = kt_packages
 save_pickle_data(data, pickle_file)
 
-if 'pricelist' in data:
-    kt_pricelist = data['pricelist']
-else:
-    # do a short load....
-    tax_profiles = {
-        "Zero Rated":"a8H4F0000003tsfUAA",
-        "Foreign":"a8H4F0000003uJbUAI",
-        "Domestic":"a8H4F0000003tnfUAA"
-    }
-    occupancy = {
-        "single":"1=1,0",
-        "double":"1=2,0",
-        "triple":"1=3,0",
-        "quad":"1=4,0"    
-    }
-    # run the pricelist load...
-    kt_pricelist = kt.get_extract(savepath, kt_packages, tax_profiles, occupancy, debug)
-    data['pricelist'] = kt_pricelist
-
-data['packages'] = kt_packages
-save_pickle_data(data, pickle_file)
-
-# augment the kt_rpicelist with the pricelist info
-for p in kt_packages:
-    if not 'pricelist' in p:
-        if 'id' in kt_pricelist:
-            p['pricelist'] = kt_pricelist[p['id']]
-
-file_path = os.path.join(savepath, "data", "kt_pricelist_{}.json".format(timestamp))
-save_json(file_path, kt_pricelist)
-
 file_path = os.path.join(savepath, "data", "kt_packages_aug_{}.json".format(timestamp))
 save_json(file_path, kt_packages)
-
-"""
-# short list for proof
-
-s_dates = list(sorted(kt_dates))[:1]
-print("Calls per package: {}".format(len(tax_profiles) * len(occupancy) * len(s_dates)))
-
-kt_augpackages = get_extract(headers, savepath, baseurl, kt_packages, s_dates, tax_profiles, occupancy)
-for key, value in kt_augpackages.items():
-    print(key)
-"""
 
 data['packages'] = kt_packages
 save_pickle_data(data, pickle_file)

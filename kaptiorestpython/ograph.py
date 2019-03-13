@@ -12,6 +12,7 @@ import requests
 class KaptioOGraph:
     # franken code for client calls...
     baseurl = None
+    sfurl = None
     username = None
     password = None
     security_token = None
@@ -21,8 +22,9 @@ class KaptioOGraph:
     access_token = None
     instance_url = None
 
-    def __init__(self, baseurl, username, password, security_token, sandbox, clientid, clientsecret):
+    def __init__(self, baseurl, sfurl, username, password, security_token, sandbox, clientid, clientsecret):
         assert(baseurl is not None)
+        assert(sfurl is not None)
         assert(username is not None)
         assert(password is not None)
         assert(security_token is not None)
@@ -31,6 +33,7 @@ class KaptioOGraph:
         assert(clientsecret is not None)
 
         self.baseurl = baseurl
+        self.sfurl = sfurl
         self.username = username
         self.password = password
         self.security_token = security_token
@@ -50,7 +53,7 @@ class KaptioOGraph:
             "username": self.username,
             "password": "{}{}".format(self.password, self.security_token)
         }
-        r = requests.post("{}/services/oauth2/token".format(self.baseurl), params=params)
+        r = requests.post("{}/services/oauth2/token".format(self.sfurl), params=params)
         self.access_token = r.json().get("access_token")
         self.instance_url = r.json().get("instance_url")
         print("Access Token:", self.access_token)
@@ -60,7 +63,7 @@ class KaptioOGraph:
         if self.access_token is None:
             self.get_token()
             
-        content_url = r"{}/services/apexrest/kaptio/packagecontent/{}".format(baseurl, packageid)
+        content_url = r"{}/services/apexrest/kaptio/packagecontent/{}".format(self.baseurl, packageid)
         content_hdr = {
             'Content-type': 'application/json',
             'Accept-Encoding': 'gzip',

@@ -17,6 +17,7 @@ kaptio_config = load_kaptioconfig(kaptio_config_file)
 
 debug = True
 baseurl = kaptio_config['ograph']['baseurl']
+sfurl = kaptio_config['sf']['url']
 username = kaptio_config['sf']['username']
 password = kaptio_config['sf']['passwd']
 security_token = kaptio_config['sf']['token']
@@ -24,7 +25,7 @@ sandbox = True
 clientid = kaptio_config['ograph']['clientid']
 clientsecret = kaptio_config['ograph']['clientsecret']
 
-kt = KaptioOGraph(baseurl, username, password, security_token, sandbox, clientid, clientsecret)
+kt = KaptioOGraph(baseurl, sfurl, username, password, security_token, sandbox, clientid, clientsecret)
 
 pickle_file = "kaptio_allsell.pickle"
 data = get_pickle_data(pickle_file)

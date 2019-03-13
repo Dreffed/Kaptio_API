@@ -35,7 +35,22 @@ season_end = data['season']['end']
 kt_packages = data['packages']
 
 if 'pricelist' in data:
+    error_count = 0
     kt_pricelist = data['pricelist']
+    print("Loaded {} packages".format(len(kt_packages)))
+
+    for p in kt_packages:
+        if 'pricelist' in p:
+            if 'errors' in p['pricelist']:
+                #print("{} has pricelist".format(p['id']))
+                #print("\tERROR Found: {}".format(p['pricelist']['errors']))    
+                error_count += p['pricelist']['errors']
+        if error_count > 0:
+            print("Load errors found, rerunning {}".format(error_count))
+            kt_pricelist = kt.get_extract(savepath, kt_packages, tax_profiles, occupancy, debug)
+            data['pricelist'] = kt_pricelist
+            save_pickle_data(data, pickle_file)
+
 else:
     # do a short load....
     tax_profiles = {
@@ -61,7 +76,11 @@ for p in kt_packages:
         if 'id' in kt_pricelist:
             p['pricelist'] = kt_pricelist[p['id']]
 
+data['packages'] = kt_packages
+save_pickle_data(data, pickle_file)
+
 file_path = os.path.join(savepath, "data", "kt_pricelist_{}.json".format(timestamp))
 save_json(file_path, kt_pricelist)
 
-save_pickle_data(data, pickle_file)
+file_path = os.path.join(savepath, "data", "kt_augmented_{}.json".format(timestamp))
+save_json(file_path, kt_packages)

@@ -452,7 +452,7 @@ class KaptioClient:
                             dates=package['dates'], tax_profiles=package['tax_profiles'], 
                             occupancy=package['occupancy'], 
                             services=package['service_levels'], debug=True)
-
+            save_json(file_path, package)
         w_results[packageid] = package
         return w_results
 
@@ -496,6 +496,12 @@ class KaptioClient:
 
                 if not 'pricelist' in p:
                     p['pricelist'] = self.walk_package(savepath, p['id'], dates=p['dates'], tax_profiles=tax_profiles, occupancy=occupancy, services=p['service_levels'], debug=True)
+                else:
+                    if 'errors' in p['pricelist']:
+                        print("Fixing errors: {} => {}".format(p['id'], p['name']))
+                        p['pricelist'] = self.walk_package(savepath, p['id'], dates=p['dates'], tax_profiles=tax_profiles, occupancy=occupancy, services=p['service_levels'], debug=True)
+                    else:
+                        print("Skipping: {} => {}".format(p['id'], p['name']))
 
                 e_time = time() - s_time
                 print("{}:{} => {} {} [{}]".format(p_count, s_count, l_count, e_time, e_count))

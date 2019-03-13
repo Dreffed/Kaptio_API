@@ -442,7 +442,7 @@ class KaptioClient:
                 print("Found test package: {} -> {}".format(package['id'], package['name']))
                 return w_results
         
-            file_path = os.path.join(savepath, "data", "kt_packages_{}_{}.json".format(package['id'], timestamp))
+            file_path = os.path.join(self.savepath, "data", "kt_packages_{}_{}.json".format(package['id'], timestamp))
 
             package['services'] = ""
             if 'service_levels' in package:
@@ -456,7 +456,8 @@ class KaptioClient:
         w_results[packageid] = package
         return w_results
 
-    def run_pool(self, pool_count, packages):
+    def run_pool(self, savepath, pool_count, packages):
+        self.savepath = savepath
         p = multiprocessing.Pool(pool_count)
         pool_data = p.map(self.worker_pool, packages)
         p.close()

@@ -42,7 +42,7 @@ for p in kt_packages:
 
 save_pickle_data(data, pickle_file)
 
-kt_pricelist = kt.run_pool(pool_thread=10, pacakges=kt_packages)
+kt_pricelist = kt.run_pool(pool_count=10, packages=kt_packages)
 
 file_path = os.path.join(savepath, "data", "kt_pricelist_{}.json".format(timestamp))
 save_json(file_path, kt_pricelist)

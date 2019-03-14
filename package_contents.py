@@ -58,3 +58,5 @@ else:
     kt_content = data['content']
 
 print("Found content for {}".format(len(kt_content)))
+
+# extract out the fields from the content...

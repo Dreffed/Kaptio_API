@@ -70,13 +70,15 @@ class KaptioClient:
     def api_data(self, url_data, paramstr ="", querystr = "", body = None):
         thisurl = 'http://{}/{}/{}{}{}'.format(self.baseurl, url_data['version'], url_data['suburl'], paramstr, querystr)
         #print("{}:{}\n\t{}". format(url_data["name"], url_data['method'], thisurl))
-
-        if url_data['method'] == "GET":
-            r = requests.get(thisurl, headers=self.headers)
-        elif url_data['method'] == "POST":
-            r = requests.post(thisurl, headers=self.headers, json=body)
-            
-        return r
+        try:
+            if url_data['method'] == "GET":
+                r = requests.get(thisurl, headers=self.headers)
+            elif url_data['method'] == "POST":
+                r = requests.post(thisurl, headers=self.headers, json=body)
+                
+            return r
+        except:
+            return None
 
     def api_list(self, url_data, paramstr, querystr, body = None):
         thisurl = 'http://{}/{}/{}{}{}'.format(self.baseurl, url_data['version'], url_data['suburl'], paramstr, querystr)
@@ -378,7 +380,7 @@ class KaptioClient:
                 else:
                     data.append(d)
         if debug:
-            filepath = os.path.join(savepath, "data", "fn_get_price_{}.json".format(timestamp))
+            filepath = os.path.join(savepath, "data", "price_{}_{}.json".format(packageid, timestamp))
             json_msg = {
                 "packageid":packageid,
                 "query": querystr,
@@ -421,15 +423,20 @@ class KaptioClient:
                                                 taxprofileid=t_value, occupancy=o_value,
                                                 services=services_str, debug=debug)
                     data[d][t_key][o_key] = []
-                    if len(pricelist['data']) > 0:
-                        data[d][t_key][o_key].extend(pricelist['data'])
-                    if len(pricelist['errors']) > 0:
-                        data[d][t_key][o_key].extend(pricelist['errors'])
+                    try:
+                        if len(pricelist['data']) > 0:
+                            data[d][t_key][o_key].extend(pricelist['data'])
+                        if len(pricelist['errors']) > 0:
+                            data[d][t_key][o_key].extend(pricelist['errors'])
+                            if not 'errors' in data:
+                                data['errors'] = 0
+                            data['errors'] += len(pricelist['errors'])
+                        c_count += 1
+                    except:
                         if not 'errors' in data:
                             data['errors'] = 0
-                        data['errors'] += len(pricelist['errors'])
-                    c_count += 1
-
+                        data['errors'] += 1
+                        data[d][t_key][o_key] = [{"errors" : [{"room_index": 0, "error": {"code": 500, "message": "Internal Server Error 500", "details": null}}]}]
         print("\tCalls:{}".format(c_count))
         return data
 

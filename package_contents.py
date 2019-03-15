@@ -47,6 +47,9 @@ season_end = data['season']['end']
 kt_packages = data['packages']
 
 kt_content = {}
+if 'content' in data:
+    del data['content']
+    
 if not 'content' in data:
     for p in kt_packages:
         # get the content

@@ -42,14 +42,14 @@ def scanfiles(folder, filter = None):
     for dirpath, _, filenames in os.walk(folder):
         for filename in filenames:
             filepath = os.path.join(dirpath, filename)
-            print(filename)
+            #print(filename)
 
             if filter is not None:
                 if not isinstance(filter, re.Pattern):
                     filter = re.compile(filter)
                 m = re.search(filter, filename)
                 if not m:
-                    print("Skipping: {}".format(filename))
+                    #print("Skipping: {}".format(filename))
                     continue
 
             try:

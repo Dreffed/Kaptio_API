@@ -333,11 +333,49 @@ class KaptioClient:
         file_path = os.path.join(savepath, "data", "kt_lauguages.json")
         save_json(file_path, data)
 
+    def get_packageprice_query(self, savepath, packageid, querystr, debug=False):
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+
+        url_data = {}
+        url_data['name'] = "Package Search"
+        url_data['version'] = 'v1.0'
+        url_data['suburl'] = 'packages/search'
+        url_data['method'] = 'GET'
+        paramstr = ''
+
+        r = self.api_data(url_data, paramstr, querystr)
+        if r.status_code == 200:
+            rd = self.get_responsedata(r)
+        else:
+            print("Failed: {} => {}".format(r, r.text)) 
+            return [{"resp": r}]
+            
+        if debug:
+            filepath = os.path.join(savepath, "data", "price_{}_{}.json".format(packageid, timestamp))
+            json_msg = {
+                "packageid":packageid,
+                "query": querystr,
+                "resp": rd
+            }
+
+            with open(filepath, 'a') as f:
+                json.dump(json_msg, f, indent=4)
+
+        return rd
+
     def get_packageprice(self, savepath, packageid, date_from, date_to, taxprofileid = 'a8H4F0000003tsfUAA', channelid = 'a6H4F0000000DkMUAU', 
                         occupancy = '1=1,0', services = 'a7r4F0000000AloQAE', debug=False):
         data = []
         errors = []
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    
+    
+        url_data = {}
+        url_data['name'] = "Package Search"
+        url_data['version'] = 'v1.0'
+        url_data['suburl'] = 'packages/search'
+        url_data['method'] = 'GET'
+        paramstr = ''
         
         search_values = {
             "tax_profile_id":taxprofileid,  # Required    #Zero
@@ -357,14 +395,7 @@ class KaptioClient:
                 search_list.append("{}={}".format(key, value))
 
         if len(search_list) > 0:
-            querystr = "?{}".format("&".join(search_list))    
-        
-        url_data = {}
-        url_data['name'] = "Package Search"
-        url_data['version'] = 'v1.0'
-        url_data['suburl'] = 'packages/search'
-        url_data['method'] = 'GET'
-        paramstr = ''
+            querystr = "?{}".format("&".join(search_list))   
 
         r = self.api_data(url_data, paramstr, querystr)
         if r.status_code == 200:
@@ -379,6 +410,7 @@ class KaptioClient:
                     errors.append(d)
                 else:
                     data.append(d)
+            
         if debug:
             filepath = os.path.join(savepath, "data", "price_{}_{}.json".format(packageid, timestamp))
             json_msg = {
@@ -389,7 +421,7 @@ class KaptioClient:
 
             with open(filepath, 'a') as f:
                 json.dump(json_msg, f, indent=4)
-            
+
         return {'data':data, 'errors':errors}
 
     def walk_package(self, savepath, packageid, dates, tax_profiles, occupancy, services, debug=False):

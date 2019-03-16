@@ -27,7 +27,19 @@ data = get_pickle_data(pickle_file)
 packageid = 'xxxxxxxxxxxxxxxxx'
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 print("Timestamp: {}".format(timestamp))
- 
+
+if 'tax_profiles' in data:
+    tax_profiles = data['tax_profiles']
+else:
+    # set up walker elements
+    tax_profiles = {
+        "Zero Rated":"a8H4F0000003tsfUAA",
+        "Foreign":"a8H4F0000003uJbUAI",
+        "Domestic":"a8H4F0000003tnfUAA"
+    }
+    data['tax_profiles'] = tax_profiles
+
+
 filepath = os.path.join(savepath, 'data', 'kt_priceerrors_20190314233403.json' )
 with open(filepath, 'r') as fp:
     kt_errorlist = json.load(fp)
@@ -36,17 +48,49 @@ print("processing {} query strs".format(len(kt_errorlist)))
 
 re_q = re.compile(r"id==([a-zA-Z0-9]+)[&]{0,1}")
 kt_pricesres = {}
+errorlist = []
+progress = 0
+processed = 0
+errors = 0
 for q in kt_errorlist:
-    print(q)
-    m = re_q.search(q)
-    if m:
-        packageid = m.group(1)
+    progress += 1
+    search_values = {}
+    phrases = q[1:].split("&")
+    for phrase in phrases:
+        terms = phrase.split("=")
+        search_values[terms[0]] = terms[-1]
+        
+    if 'filter' in search_values:
+        packageid = search_values['filter']
 
-    p_data = kt.get_packageprice_query(savepath, packageid, q, debug=True)
-    if not packageid in kt_pricesres:
-        kt_pricesres[packageid] = []
-    kt_pricesres[packageid].append(p_data)
-    break
+    if 'tax_profile_id' in search_values:
+        if search_values['tax_profile_id'] in tax_profiles:
+            old_tp = search_values['tax_profile_id']
+            search_values['tax_profile_id'] = tax_profiles[search_values['tax_profile_id']]
+            q = q.replace(old_tp, search_values['tax_profile_id'])
+
+    try:
+        p = kt.get_packageprice_query(savepath, packageid, q, debug=True)
+        if not packageid in kt_pricesres:
+            kt_pricesres[packageid] = []
+        p_data = {
+            "search_values": search_values,
+            "response": p
+            }
+        kt_pricesres[packageid].append(p_data)
+        processed +1
+    except Exception as ex:
+        print("ERROR: {}\n\t{}\n\t{}".format(q,search_values,ex))
+        errorlist.append({
+            "q":q,
+            "search_vlaues":search_values,
+            "error": ex
+        })
+        errors += 1
+    if progress % 100 == 0:
+        print("{}/{} :: E:{}".format(processed, progress, errors))
+
+print("Fetched {} prices".format(len(kt_pricesres)))
 
 file_path = os.path.join(savepath, "data", "kt_priceres_{}.json".format(timestamp))
 save_json(file_path, kt_pricesres)

@@ -8,6 +8,8 @@ import path
 from time import time
 from datetime import datetime
 
+refresh = True
+
 homepath = os.path.expanduser("~")
 datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
 savepath = os.path.join(homepath, *datapaths)
@@ -87,7 +89,7 @@ season_end = data['season']['end']
 
 save_pickle_data(data, pickle_file)
 
-if 'packages' in data:
+if 'packages' in data and not refresh:
     kt_packages = data['packages']
 else:
     kt_packages = kt.get_packages(savepath)
@@ -109,6 +111,3 @@ save_pickle_data(data, pickle_file)
 
 file_path = os.path.join(savepath, "data", "kt_packages_aug_{}.json".format(timestamp))
 save_json(file_path, kt_packages)
-
-data['packages'] = kt_packages
-save_pickle_data(data, pickle_file)

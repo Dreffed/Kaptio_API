@@ -19,7 +19,12 @@ def save_pickle_data(data, pickleName):
     print('Saving Data... [%s]' % pickleName)
     with open(pickleName, 'wb') as handle:
         pickle.dump(data, handle)
-        
+
+def load_json(filepath):
+    with open(filepath, 'r') as fp:
+        data = json.load(fp)
+    return data
+
 def save_json(file_path, data):
     with open(file_path, 'w') as f:
         json.dump(data, f, indent=4)
@@ -66,6 +71,44 @@ def scanfiles(folder, filter = None):
             except Exception as e:
                 print("ERROR: scan files failed {}".format(e))
 
+def extract_rows(node, fields):
+    """ 
+        node - a dictionary of data
+        fields an array of dicts
+            {
+                "source":<>,
+                "_output":<>
+                "translate": {<term>:<translate>, ...}
+            }
+    """
+    row = {}
+    if not isinstance(node, dict):
+        return row
+    #print("====\n{}".format(fields))
+    for key, value in node.items():
+        celldata = value
+        if key in fields:
+            if '_output' in fields[key]:
+                outname = fields[key]['_output']
+            else:
+                outname = key
+
+            if '_fields' in  fields[key]:
+                if '_type' in fields[key]:
+                    if fields[key]["_type"] == 'list':
+                        # this is a list object.
+                        celldata = []
+                        for item in value:
+                            celldata.append(extract_rows(item, fields[key]['_fields']))
+                    elif fields[key]["_type"] == 'records':
+                        celldata = []
+                        for item in value[fields[key]["_type"]]:
+                            celldata.append(extract_rows(item, fields[key]['_fields']))
+                    elif fields[key]["_type"] == 'dict':
+                        celldata = extract_rows(value, fields[key]['_fields'])
+            row[outname] = celldata
+
+    return row  
 
 if __name__ == "__main__":
     folder = r"C:\Users\David Gloyn-Cox\OneDrive - Great Canadian Railtour Co\Jupyter_NB" # os.getcwd()

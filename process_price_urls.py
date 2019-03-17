@@ -39,7 +39,6 @@ else:
     }
     data['tax_profiles'] = tax_profiles
 
-
 filepath = os.path.join(savepath, 'data', 'kt_priceerrors_20190314233403.json' )
 with open(filepath, 'r') as fp:
     kt_errorlist = json.load(fp)

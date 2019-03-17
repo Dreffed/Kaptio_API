@@ -3,22 +3,22 @@ from kaptiorestpython.client import KaptioClient, load_kaptioconfig
 from utils import get_pickle_data, save_pickle_data, save_json, scanfiles, load_json, extract_rows
 from xml_utilities import get_farebase
 from content_utils import get_web, get_svc, get_hgh
-import json
-import pickle
-import os
-import path
+from os import path
 from time import time
 from datetime import datetime
 from xml.etree.ElementTree import ElementTree, Element, SubElement, Comment, tostring
 from ElementTree_pretty import prettify
+import json
+import pickle
+import codecs
 
-homepath = os.path.expanduser("~")
+homepath = path.expanduser("~")
 datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
-savepath = os.path.join(homepath, *datapaths)
+savepath = path.join(homepath, *datapaths)
 localpaths = ["data", "fresh"]
-localpath = os.path.join(homepath, *localpaths)
+localpath = path.join(homepath, *localpaths)
 
-kaptio_config_file = os.path.join(savepath, "config", "kaptio_settings.json")
+kaptio_config_file = path.join(savepath, "config", "kaptio_settings.json")
 kaptio_config = load_kaptioconfig(kaptio_config_file)
 
 debug = True
@@ -65,22 +65,23 @@ if 'content' in data:
 
 kt_pcontent = {}
 for key, value in kt_content.items():
+
     if isinstance(value, list):
         if not key in kt_pcontent:
-            kt_content[key] = []
+            kt_pcontent[key] = []
+
         for item in value:
             row = extract_rows(item, fields) 
-            kt_content[key].append(row)
+            kt_pcontent[key].append(row)
 
-print(len(kt_content))
+print("Content {}".format(len(kt_content)))
+print("Pivot {}".format(len(kt_pcontent)))
 
-"""
-file_path = os.path.join(savepath, "data", "kt_contents_{}.json".format(timestamp))
+file_path = path.join(savepath, "data", "kt_contents_{}.json".format(timestamp))
 save_json(file_path, kt_content)
 
-file_path = os.path.join(savepath, "data", "kt_content_rows_{}.json".format(timestamp))
-save_json(file_path, rows)
-"""
+file_path = path.join(savepath, "data", "kt_pcontent_{}.json".format(timestamp))
+save_json(file_path, kt_pcontent)
 
 departure_tyes = [
     'Anyday', 'Seasonal', 'Fixed'
@@ -175,11 +176,35 @@ for p in kt_packages:
     # prepare the serviceiteinerary
     # prepare the highlights
     if packageid in kt_pcontent:
-        if len(kt_content[packageid]) > 0:
-            content_node = kt_content[packageid][0].copy()
+        if len(kt_pcontent[packageid]) > 0:
+            content_node = kt_pcontent[packageid][0].copy()
+
             web_itin = get_web(content_node)
             svc_itin = get_svc(content_node)
-            highligthts = get_hgh(content_node)
+            highlights = get_hgh(content_node)
+
+            # web itinierary
+            xml_web = SubElement(xml_product, 'webItinerary')
+            for w in web_itin:
+                xml_wday = SubElement(xml_web, 'day', num=str(w.get('num', '')))
+                for w_key, w_value in w.items():
+                    if w_key == 'num':
+                        continue
+                    w_n = SubElement(xml_wday, w_key)
+                    w_n.text = str(w_value)
+             
+            # services
+            xml_svc = Element('serviceItinerary')
+            for s_key, s_value in svc_itin.items():
+                xml_ele = SubElement(xml_svc, 'service', day=str(s_key), itemSequence=str(1), serviceSequence=str(1))
+                xml_t = SubElement(xml_ele, 'text', language='English')
+                xml_t.text = "<!CDATA[{}]]".format(s_value)
+                
+            # highlights
+            xml_hgh = SubElement(xml_product, 'highlights')
+            for hh in highlights:
+                x_h = SubElement(xml_hgh, 'highlight')
+                x_h.text = str(hh)
 
     xml_seats = SubElement(xml_product, 'seatClasses')
     service_levels = {}
@@ -212,8 +237,12 @@ for p in kt_packages:
 
                             x_t = SubElement(xml_adult, 'tax')
                             x_t.text = str(s_value['prices']['tax'])
+                        
+                        xml_basis.append(xml_svc)
+
 
 print("{} exported".format(package_count))
 
-with open(os.path.join(savepath, 'data', 'webdata-zerorated-formated.xml'), 'w') as fp:
+xml_file = path.join(savepath, 'data', 'webdata-zerorated-formated.xml') 
+with codecs.open(xml_file, 'w', encoding='utf8') as fp:
     fp.write(prettify(xml_root))

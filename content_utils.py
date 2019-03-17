@@ -1,10 +1,39 @@
-def get_web(content):
-    data = {}
+import json
+import re
 
+def get_svc(content):
+    data = {}
+    days = []
+    if 'packagedays' in content:
+        if isinstance(content['packagedays'], list):
+            for item in content['packagedays']:
+                day = {}
+                day['num'] = str(item.get('packageday_index',0))
+                day['dayid'] = item.get('packageday_id', None)
+                days.append(day)
+    
+    events = {}
+    if 'packageinformation' in content:
+        for info in content.get('packageinformation', []):
+            if info.get('packageinfo_category', '') == 'Description':
+                text = info.get('packageinfo_text', None)
+                dayid = info.get('pacakgeinfo_packageday', None)
+                if dayid and text:
+                    if not dayid in events:
+                        events[dayid] = []
+                    events[dayid].append(text)
+
+    for d in days:
+        dayid = d.get('dayid', '')
+        daynum = d.get('num', 0)
+        if not daynum in data:
+            data[daynum] = []
+        for event in events.get(dayid, []):
+            data[daynum].append(event)
 
     return data
 
-def get_svc(content):
+def get_web(content):
     data = []
     if 'packagedays' in content:
         if isinstance(content['packagedays'], list):
@@ -34,6 +63,22 @@ def get_svc(content):
     return data
 
 def get_hgh(content):
-    data = {}
-
+    data = []
+    if 'packageinformation' in content:
+        for info in content.get('packageinformation', []):
+            if info.get('packageinfo_category', '') == 'Activities':
+                text = info.get('packageinfo_text', None)
+                if text:
+                    data.append(text)
     return data
+
+def stripUnicode(text):
+    q = re.compile(r'\\u([\d]{4})')
+    newchr = {
+        '2019': "'",
+        '2013': "-",
+        '2044': "/"
+    }
+    
+
+        

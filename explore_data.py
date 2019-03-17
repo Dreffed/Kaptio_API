@@ -18,7 +18,7 @@ print("Pickles:")
 for f in pickle_files:
     print("\t{} => {} [{}]".format(f['file'], f['folder'], json.dumps(f, indent=2)))
 
-pickle_file = "kaptio_allsell.pandarus.pickle"
+pickle_file = "kaptio_allsell.pickle"
 
 data = get_pickle_data(pickle_file)
 
@@ -45,7 +45,7 @@ if update_lookups:
 
 #"": {"_output": ""},
 #
-contentconfigpath = "contentfields.json"
+contentconfigpath = "content_fields.json"
 fields = load_json(contentconfigpath)
 
 kt_packages = []

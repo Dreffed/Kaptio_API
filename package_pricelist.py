@@ -8,6 +8,8 @@ import path
 from time import time
 from datetime import datetime
 
+reload = True
+
 homepath = os.path.expanduser("~")
 datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
 savepath = os.path.join(homepath, *datapaths)
@@ -34,7 +36,7 @@ season_start = data['season']['start']
 season_end = data['season']['end']
 kt_packages = data['packages']
 
-if 'pricelist' in data:
+if 'pricelist' in data and not reload:
     error_count = 0
     kt_pricelist = data['pricelist']
     print("Loaded {} packages".format(len(kt_packages)))

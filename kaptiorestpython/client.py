@@ -298,7 +298,10 @@ class KaptioClient:
         data = self.api_list( url_data, paramstr, querystr)
         print("found: {}".format(len(data)))
         file_path = os.path.join(data, "data", "kt_items_{}.json".format(timestamp))
-        save_json(file_path, data)
+        try:
+            save_json(file_path, data)
+        except: 
+            pass
         return data
 
     def get_servicelevels(self, savepath):
@@ -316,7 +319,10 @@ class KaptioClient:
         data = self.api_list( url_data, paramstr, querystr)
         print("found: {}".format(len(data)))
         file_path = os.path.join(savepath, "data", "kt_servicelevels_{}.json".format(timestamp))
-        save_json(file_path, data)
+        try:
+            save_json(file_path, data)
+        except: 
+            pass
 
     def get_langauages(self, savepath):
         # get all the languages
@@ -331,7 +337,10 @@ class KaptioClient:
         data = self.api_list( url_data, paramstr, querystr)
         print("found: {}".format(len(data)))
         file_path = os.path.join(savepath, "data", "kt_lauguages.json")
-        save_json(file_path, data)
+        try:
+            save_json(file_path, data)
+        except: 
+            pass
 
     def get_packageprice_query(self, savepath, packageid, querystr, debug=False):
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -351,16 +360,18 @@ class KaptioClient:
             return [{"resp": r}]
             
         if debug:
-            filepath = os.path.join(savepath, "data", "price_{}_{}.json".format(packageid, timestamp))
-            json_msg = {
-                "packageid":packageid,
-                "query": querystr,
-                "resp": rd
-            }
+            try:
+                filepath = os.path.join(savepath, "data", "price_{}_{}.json".format(packageid, timestamp))
+                json_msg = {
+                    "packageid":packageid,
+                    "query": querystr,
+                    "resp": rd
+                }
 
-            with open(filepath, 'a') as f:
-                json.dump(json_msg, f, indent=4)
-
+                with open(filepath, 'a') as f:
+                    json.dump(json_msg, f, indent=4)
+            except:
+                pass
         return rd
 
     def get_packageprice(self, savepath, packageid, date_from, date_to, taxprofileid = 'a8H4F0000003tsfUAA', channelid = 'a6H4F0000000DkMUAU', 
@@ -412,15 +423,18 @@ class KaptioClient:
                     data.append(d)
             
         if debug:
-            filepath = os.path.join(savepath, "data", "price_{}_{}.json".format(packageid, timestamp))
-            json_msg = {
-                "packageid":packageid,
-                "query": querystr,
-                "resp": rd
-            }
+            try:
+                filepath = os.path.join(savepath, "data", "price_{}_{}.json".format(packageid, timestamp))
+                json_msg = {
+                    "packageid":packageid,
+                    "query": querystr,
+                    "resp": rd
+                }
 
-            with open(filepath, 'a') as f:
-                json.dump(json_msg, f, indent=4)
+                with open(filepath, 'a') as f:
+                    json.dump(json_msg, f, indent=4)
+            except:
+                pass
 
         return {'data':data, 'errors':errors}
 
@@ -544,7 +558,10 @@ class KaptioClient:
 
                 e_time = time() - s_time
                 print("{}:{} => {} {} [{}]".format(p_count, s_count, l_count, e_time, e_count))
-                save_json(file_path, p)
+                try:
+                    save_json(file_path, p)
+                except: 
+                    pass
                 data[p['id']] = p
         return data
 

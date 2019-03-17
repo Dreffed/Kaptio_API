@@ -1,10 +1,12 @@
 import pickle
 import json
 import os
+import shutil
 import stat
 import sys
 import time
 import re
+from datetime import datetime
 
 # helper functions
 def get_pickle_data(pickleName):
@@ -111,17 +113,22 @@ def extract_rows(node, fields):
     return row  
 
 if __name__ == "__main__":
-    folder = r"C:\Users\David Gloyn-Cox\OneDrive - Great Canadian Railtour Co\Jupyter_NB" # os.getcwd()
-    print(folder)
-    filter_str = "[a-zA-Z_]*.json"
-    files_str = []
-    for f in scanfiles(folder):
-        files_str.append(f)
+    import socket
+    hostname = socket.gethostname()
+    homepath = os.path.expanduser("~")
+    datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
+    savepath = os.path.join(homepath, *datapaths)
 
-    filter_re = re.compile(filter_str)
-    files_re = []
-    for f in scanfiles(folder, filter_str):
-        files_re.append(f)
-        
-    print(len(files_str), len(files_re))
-    
+
+    for f in scanfiles('.', r'.*\.pickle'):
+        fpart = f['file'].split('.')
+        fdate = datetime.strptime(f['modified'], '%Y-%m-%d %H:%M:%S')
+        newname = '{}.{}.{}.{}'.format(fpart[0], hostname, fdate.strftime('%Y%m%d%H%M'), fpart[-1])
+        if not os.path.exists(newname):
+            print("Creating copy: {} => {}".format(f['file'], newname))
+            shutil.copy(f['file'], newname)
+        dstpath = os.path.join(savepath, 'config', newname)
+        if not os.path.exists(dstpath):
+            print("Copy to share: {} => {}".format(f['file'], newname))
+            shutil.copy(f['file'], dstpath)
+            

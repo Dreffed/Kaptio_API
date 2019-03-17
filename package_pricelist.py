@@ -36,6 +36,7 @@ season_start = data['season']['start']
 season_end = data['season']['end']
 kt_packages = data['packages']
 
+# default behaviour is to only reload errored pacakges
 if 'pricelist' in data and not reload:
     error_count = 0
     kt_pricelist = data['pricelist']

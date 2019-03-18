@@ -95,8 +95,8 @@ class KaptioClient:
                 break
             
             json_data = json.loads(r.text)
-            print('====')
-            display_fields(json_data)
+            #print('====')
+            #display_fields(json_data)
             data.extend(json_data['records'])
             
             if json_data['next']:
@@ -183,7 +183,7 @@ class KaptioClient:
         querystr = ''
 
         data = self.api_list( url_data, paramstr, querystr)
-        print("found: {}".format(len(data)))
+        #print("found: {}".format(len(data)))
         file_path = os.path.join(savepath, "data", "kt_packages_{}.json".format(timestamp))
         save_json(file_path, data)
         return data
@@ -261,7 +261,7 @@ class KaptioClient:
         r = self.api_data( url_data, paramstr, querystr)
         if r.status_code == 200:
             data = self.save_response(savepath, url_data['name'], r, packageid)
-            print("Found {} dates".format(len(data)))
+            #print("Found {} dates".format(len(data)))
         else:
             print("Failed: {} => {}".format(r, r.text))    
         return data

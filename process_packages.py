@@ -108,6 +108,7 @@ for p in kt_packages:
 
 data['packages'] = kt_packages
 save_pickle_data(data, pickle_file)
+print('Saved {} packages'.format(len(kt_packages)))
 
 file_path = os.path.join(savepath, "data", "kt_packages_aug_{}.json".format(timestamp))
 save_json(file_path, kt_packages)

@@ -125,7 +125,7 @@ fields = {
                 "_output": "packageinformation",
                 "_fields": {
                     "KaptioTravel__Key__c": {"_output": "packageinfo_category"},
-                    "KaptioTravel__PackageDay__c": {"_output": "pacakgeinfo_packageday"},
+                    "KaptioTravel__PackageDay__c": {"_output": "packageinfo_packageday"},
                     "KaptioTravel__Language__c": {"_output": "packageinfo_language"},
                     "Id": {"_output": "packageinfo_id"},
                     "KaptioTravel__Value__c": {"_output": "packageinfo_text"},

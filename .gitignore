@@ -2,3 +2,5 @@
 *.pickle
 *.pyc
 tempCodeRunnerFile.py
+*.xml
+tmp_*.py

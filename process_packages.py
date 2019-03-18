@@ -48,7 +48,6 @@ else:
         "double":"1=2,0",
         "triple":"1=3,0",
         "quad":"1=4,0"
-
     }
 
     child_occupancy = {

@@ -67,37 +67,53 @@ kt_1040 = []
 kt_1020 = []
 
 package_count = 0
+price_count = 0
 error_count = 0
 
-for p in kt_packages:
-    packageid = p.get('packageid')
-    datestamp = p.get('updated')
-    hostname = p.get('hostname')
+tax_profiles = data.get('tax_profiles', {})
+
+#for p_value in kt_packages:
+for p_key, p_value in kt_processed.items():
+    packageid = p_value.get('id')
+    datestamp = p_value.get('updated')
+    hostname = p_value.get('hostname')
+    package_count += 1
     if not packageid:
         continue
-    print("{} => {} {}".format(packageid, datestamp, hostname))
+
+    service_levels = p_value.get('service_levels', {})
+    sl_rev = {}
+    for s_item in service_levels:
+        sl_id = s_item.get('id')
+        if sl_id:
+            sl_rev[sl_id] = s_item
 
     # scan and pull the errors...
-    for d_key, d_value in p('pricelist', {}).items():
+    for d_key, d_value in p_value.get('pricelist', {}).items():
+        if d_key == "errors":
+            continue        
         for t_key, t_value in d_value.items():
             if t_key == "errors":
                 continue
+
             for o_key, o_value in t_value.items():
                 for p_item in o_value:
-                    if packageid == 'a754F0000000A2qQAE':
-                        print(p_item)
+                    price_count += 1
 
                     for e_item in p_item.get('errors', []):
+                        error_count += 1
                         e_code = e_item.get('error', {}).get('code') 
                         log_item = {
                             'packageid': packageid,
                             'date': d_key,
+                            'tax_profile_id': tax_profiles.get(t_key),
                             'tax_profile': t_key,
                             'occupancy': o_key,
                             'service_level_id': p_item.get('service_level_id'),
-                            'error': e_item
+                            'service_level': sl_rev.get(p_item.get('service_level_id'),{}).get('name'),
+                            'code': e_code,
+                            'message': e_item.get('error', {}).get('message') 
                         }
-                        print("===\n{}".format(json.dumps(log_item, indent=4)))
 
                         if e_code == 1040:
                             kt_1040.append(log_item)
@@ -106,19 +122,25 @@ for p in kt_packages:
                         else:
                             kt_error.append(log_item)
 
-print("Packages: {}\n\tMisc:{}\n\t1020:{}\n\t1040:{}".format(len(data.get('packages', [])), len(kt_error), len(kt_1020), len(kt_1040)))
+print("Packages: {}".format(len(data.get('packages', []))))
+print("Processed: {}\n\tPrices:{}\n\tErrors:{}".format(package_count, price_count, error_count))
+print("\tMisc:{}\n\t1020:{}\n\t1040:{}".format(len(kt_error), len(kt_1020), len(kt_1040)))
+fieldnames = ['packageid', 'date', 'tax_profile_id', 'tax_profile', 'occupancy', 'service_level_id', 'service_level', 'code', 'message']
 
 if len(kt_1020) > 0:
     with open('product_launch_1020.csv', 'w', newline='') as csvfile:
-        fieldnames = ['packageid', 'date', 'tax_profile', 'occupancy', 'service_level_id', 'error']
-        writer = csv.DictWriter(kt_1020, fieldnames=fieldnames)
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(kt_1020)
 
 if len(kt_1040) > 0:
     with open('product_launch_1040.csv', 'w', newline='') as csvfile:
-        fieldnames = ['packageid', 'date', 'tax_profile', 'occupancy', 'service_level_id', 'error']
-        writer = csv.DictWriter(kt_1040, fieldnames=fieldnames)
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(kt_1040)
 
 if len(kt_error) > 0:
     with open('product_launch_errors.csv', 'w', newline='') as csvfile:
-        fieldnames = ['packageid', 'date', 'tax_profile', 'occupancy', 'service_level_id', 'error']
-        writer = csv.DictWriter(kt_error, fieldnames=fieldnames)
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(kt_error)

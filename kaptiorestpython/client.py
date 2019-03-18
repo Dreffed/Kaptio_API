@@ -5,7 +5,7 @@ import requests
 from datetime import datetime
 from kaptiorestpython.helper.http_lib import HttpLib
 from kaptiorestpython.helper.exceptions import APIException
-from utils import save_json
+from utils import save_json, scan_packagefiles
 import multiprocessing
 from multiprocessing.queues import Empty
 
@@ -298,7 +298,10 @@ class KaptioClient:
         data = self.api_list( url_data, paramstr, querystr)
         print("found: {}".format(len(data)))
         file_path = os.path.join(data, "data", "kt_items_{}.json".format(timestamp))
-        save_json(file_path, data)
+        try:
+            save_json(file_path, data)
+        except: 
+            pass
         return data
 
     def get_servicelevels(self, savepath):
@@ -316,7 +319,10 @@ class KaptioClient:
         data = self.api_list( url_data, paramstr, querystr)
         print("found: {}".format(len(data)))
         file_path = os.path.join(savepath, "data", "kt_servicelevels_{}.json".format(timestamp))
-        save_json(file_path, data)
+        try:
+            save_json(file_path, data)
+        except: 
+            pass
 
     def get_langauages(self, savepath):
         # get all the languages
@@ -331,13 +337,56 @@ class KaptioClient:
         data = self.api_list( url_data, paramstr, querystr)
         print("found: {}".format(len(data)))
         file_path = os.path.join(savepath, "data", "kt_lauguages.json")
-        save_json(file_path, data)
+        try:
+            save_json(file_path, data)
+        except: 
+            pass
+
+    def get_packageprice_query(self, savepath, packageid, querystr, debug=False):
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+
+        url_data = {}
+        url_data['name'] = "Package Search"
+        url_data['version'] = 'v1.0'
+        url_data['suburl'] = 'packages/search'
+        url_data['method'] = 'GET'
+        paramstr = ''
+
+        r = self.api_data(url_data, paramstr, querystr)
+        if r.status_code == 200:
+            rd = self.get_responsedata(r)
+        else:
+            print("Failed: {} => {}".format(r, r.text)) 
+            return [{"resp": r}]
+            
+        if debug:
+            try:
+                filepath = os.path.join(savepath, "data", "price_{}_{}.json".format(packageid, timestamp))
+                json_msg = {
+                    "packageid":packageid,
+                    "query": querystr,
+                    "resp": rd
+                }
+
+                with open(filepath, 'a') as f:
+                    json.dump(json_msg, f, indent=4)
+            except:
+                pass
+        return rd
 
     def get_packageprice(self, savepath, packageid, date_from, date_to, taxprofileid = 'a8H4F0000003tsfUAA', channelid = 'a6H4F0000000DkMUAU', 
                         occupancy = '1=1,0', services = 'a7r4F0000000AloQAE', debug=False):
         data = []
         errors = []
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    
+    
+        url_data = {}
+        url_data['name'] = "Package Search"
+        url_data['version'] = 'v1.0'
+        url_data['suburl'] = 'packages/search'
+        url_data['method'] = 'GET'
+        paramstr = ''
         
         search_values = {
             "tax_profile_id":taxprofileid,  # Required    #Zero
@@ -357,14 +406,7 @@ class KaptioClient:
                 search_list.append("{}={}".format(key, value))
 
         if len(search_list) > 0:
-            querystr = "?{}".format("&".join(search_list))    
-        
-        url_data = {}
-        url_data['name'] = "Package Search"
-        url_data['version'] = 'v1.0'
-        url_data['suburl'] = 'packages/search'
-        url_data['method'] = 'GET'
-        paramstr = ''
+            querystr = "?{}".format("&".join(search_list))   
 
         r = self.api_data(url_data, paramstr, querystr)
         if r.status_code == 200:
@@ -379,17 +421,21 @@ class KaptioClient:
                     errors.append(d)
                 else:
                     data.append(d)
-        if debug:
-            filepath = os.path.join(savepath, "data", "price_{}_{}.json".format(packageid, timestamp))
-            json_msg = {
-                "packageid":packageid,
-                "query": querystr,
-                "resp": rd
-            }
-
-            with open(filepath, 'a') as f:
-                json.dump(json_msg, f, indent=4)
             
+        if debug:
+            try:
+                filepath = os.path.join(savepath, "data", "price_{}_{}.json".format(packageid, timestamp))
+                json_msg = {
+                    "packageid":packageid,
+                    "query": querystr,
+                    "resp": rd
+                }
+
+                with open(filepath, 'a') as f:
+                    json.dump(json_msg, f, indent=4)
+            except:
+                pass
+
         return {'data':data, 'errors':errors}
 
     def walk_package(self, savepath, packageid, dates, tax_profiles, occupancy, services, debug=False):
@@ -436,7 +482,7 @@ class KaptioClient:
                         if not 'errors' in data:
                             data['errors'] = 0
                         data['errors'] += 1
-                        data[d][t_key][o_key] = [{"errors" : [{"room_index": 0, "error": {"code": 500, "message": "Internal Server Error 500", "details": null}}]}]
+                        data[d][t_key][o_key] = [{"errors" : [{"room_index": 0, "error": {"code": 500, "message": "Internal Server Error 500", "details": ""}}]}]
         print("\tCalls:{}".format(c_count))
         return data
 
@@ -479,10 +525,18 @@ class KaptioClient:
         s_time = time()
         print("{}:{} => {} {} [{}]".format(p_count, s_count, l_count, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 0))
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-
+        
+        kt_processed = scan_packagefiles(savepath)
+        
         data = {}
         for p in packages:
             p_count += 1
+            packageid = p.get('id')
+
+            if kt_processed.get(packageid):
+                print("Skipping {}: already downloaded".format(packageid))
+                continue
+
             if p['record_type_name'] == 'Package' and p['active']:
                 if p['name'].lower().startswith('test'):
                     continue
@@ -492,17 +546,13 @@ class KaptioClient:
                 p['services'] = ""
                 p['direction'] = ""
                 p['product_code'] = ""
+                p['services'] = [s.get('id') for s in p.get('service_levels', [])]
                 
-                if 'service_levels' in p:
-                    p['services'] = [s['id'] for s in p['service_levels']]
-                if 'custom_fields' in p:
-                    if 'direction' in p['custom_fields']:
-                        p['direction'] = p['custom_fields']['direction']
-                    if 'product_code' in p['custom_fields']:
-                        p['product_code'] = p['custom_fields']['product_code']
+                p['direction'] = p.get('custom_fields',{}).get('direction')
+                p['product_code'] = p.get('custom_fields',{}).get('product_code')
 
                 if not 'pricelist' in p:
-                    p['pricelist'] = self.walk_package(savepath, p['id'], dates=p['dates'], tax_profiles=tax_profiles, occupancy=occupancy, services=p['service_levels'], debug=True)
+                    p['pricelist'] = self.walk_package(savepath, packageid, dates=p['dates'], tax_profiles=tax_profiles, occupancy=occupancy, services=p['service_levels'], debug=True)
                 else:
                     if 'errors' in p['pricelist']:
                         print("Fixing errors: {} => {}".format(p['id'], p['name']))
@@ -512,7 +562,10 @@ class KaptioClient:
 
                 e_time = time() - s_time
                 print("{}:{} => {} {} [{}]".format(p_count, s_count, l_count, e_time, e_count))
-                save_json(file_path, p)
+                try:
+                    save_json(file_path, p)
+                except: 
+                    pass
                 data[p['id']] = p
         return data
 

@@ -5,7 +5,7 @@ import requests
 from datetime import datetime
 from kaptiorestpython.helper.http_lib import HttpLib
 from kaptiorestpython.helper.exceptions import APIException
-from utils import save_json
+from utils import save_json, scan_packagefiles
 import multiprocessing
 from multiprocessing.queues import Empty
 
@@ -482,7 +482,7 @@ class KaptioClient:
                         if not 'errors' in data:
                             data['errors'] = 0
                         data['errors'] += 1
-                        data[d][t_key][o_key] = [{"errors" : [{"room_index": 0, "error": {"code": 500, "message": "Internal Server Error 500", "details": null}}]}]
+                        data[d][t_key][o_key] = [{"errors" : [{"room_index": 0, "error": {"code": 500, "message": "Internal Server Error 500", "details": ""}}]}]
         print("\tCalls:{}".format(c_count))
         return data
 
@@ -525,10 +525,18 @@ class KaptioClient:
         s_time = time()
         print("{}:{} => {} {} [{}]".format(p_count, s_count, l_count, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 0))
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-
+        
+        kt_processed = scan_packagefiles(savepath)
+        
         data = {}
         for p in packages:
             p_count += 1
+            packageid = p.get('id')
+
+            if kt_processed.get(packageid):
+                print("Skipping {}: already downloaded".format(packageid))
+                continue
+
             if p['record_type_name'] == 'Package' and p['active']:
                 if p['name'].lower().startswith('test'):
                     continue
@@ -538,17 +546,13 @@ class KaptioClient:
                 p['services'] = ""
                 p['direction'] = ""
                 p['product_code'] = ""
+                p['services'] = [s.get('id') for s in p.get('service_levels', [])]
                 
-                if 'service_levels' in p:
-                    p['services'] = [s['id'] for s in p['service_levels']]
-                if 'custom_fields' in p:
-                    if 'direction' in p['custom_fields']:
-                        p['direction'] = p['custom_fields']['direction']
-                    if 'product_code' in p['custom_fields']:
-                        p['product_code'] = p['custom_fields']['product_code']
+                p['direction'] = p.get('custom_fields',{}).get('direction')
+                p['product_code'] = p.get('custom_fields',{}).get('product_code')
 
                 if not 'pricelist' in p:
-                    p['pricelist'] = self.walk_package(savepath, p['id'], dates=p['dates'], tax_profiles=tax_profiles, occupancy=occupancy, services=p['service_levels'], debug=True)
+                    p['pricelist'] = self.walk_package(savepath, packageid, dates=p['dates'], tax_profiles=tax_profiles, occupancy=occupancy, services=p['service_levels'], debug=True)
                 else:
                     if 'errors' in p['pricelist']:
                         print("Fixing errors: {} => {}".format(p['id'], p['name']))

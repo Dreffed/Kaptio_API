@@ -51,6 +51,7 @@ def scanfiles(folder, filter = None):
             filepath = os.path.join(dirpath, filename)
             #print(filename)
 
+            m_data = None
             if filter is not None:
                 if not isinstance(filter, re.Pattern):
                     filter = re.compile(filter)
@@ -58,6 +59,8 @@ def scanfiles(folder, filter = None):
                 if not m:
                     #print("Skipping: {}".format(filename))
                     continue
+
+                m_data = [m.groupdict() for m in filter.finditer(filename)]
 
             try:
                 mTime, aTime, fSize = get_fileinfo(filepath)
@@ -69,6 +72,9 @@ def scanfiles(folder, filter = None):
                     'accessed': aTime,
                     'size': fSize
                 }
+                if m_data:
+                    data['matches'] = m_data
+
                 yield data
             except Exception as e:
                 print("ERROR: scan files failed {}".format(e))
@@ -112,14 +118,7 @@ def extract_rows(node, fields):
 
     return row  
 
-if __name__ == "__main__":
-    import socket
-    hostname = socket.gethostname()
-    homepath = os.path.expanduser("~")
-    datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
-    savepath = os.path.join(homepath, *datapaths)
-
-
+def copy_pickles(savepath):
     for f in scanfiles('.', r'.*\.pickle'):
         fpart = f['file'].split('.')
         fdate = datetime.strptime(f['modified'], '%Y-%m-%d %H:%M:%S')
@@ -131,4 +130,32 @@ if __name__ == "__main__":
         if not os.path.exists(dstpath):
             print("Copy to share: {} => {}".format(f['file'], newname))
             shutil.copy(f['file'], dstpath)
-            
+
+def scan_packagefiles(savepath):
+    data = {}
+    for f in scanfiles(os.path.join(savepath, 'data'), r"kt_package_(?P<packageid>[a-zA-Z0-9]+)_(?P<datestr>[\d]+).*.json"):
+        
+        for m in f.get('matches', []):
+            packageid = m.get('packageid', None)
+
+        if packageid and not data.get(packageid, None):
+            try:
+                json_data = load_json(os.path.join(f.get('folder'), f.get('file')))
+                data[packageid] = json_data
+            except Exception as ex:
+                print("skipping file {}\n{}".format(f, ex))
+    return data
+
+if __name__ == "__main__":
+    import socket
+    hostname = socket.gethostname()
+    homepath = os.path.expanduser("~")
+    datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
+    savepath = os.path.join(homepath, *datapaths)
+    scan_packagefiles(savepath, )
+
+    kt_processed = scan_packagefiles(savepath)
+    print(len(kt_processed))
+
+
+

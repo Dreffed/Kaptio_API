@@ -1,6 +1,6 @@
 # load the dependancies
 from kaptiorestpython.client import KaptioClient, load_kaptioconfig
-from utils import get_pickle_data, save_pickle_data, save_json, scanfiles
+from utils import get_pickle_data, save_pickle_data, save_json, scanfiles, scan_packagefiles
 import json
 import pickle
 import os
@@ -9,6 +9,7 @@ from time import time
 from datetime import datetime
 
 reload = True
+checkdumps = True
 
 homepath = os.path.expanduser("~")
 datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
@@ -35,24 +36,32 @@ search_values = data['search_values']
 season_start = data['season']['start']
 season_end = data['season']['end']
 kt_packages = data['packages']
+kt_processed = {}
 
-# default behaviour is to only reload errored pacakges
+if checkdumps:
+    kt_processed = scan_packagefiles(savepath)
+
+# default behaviour is to only reload errored packages
 if 'pricelist' in data and not reload:
     error_count = 0
     kt_pricelist = data['pricelist']
     print("Loaded {} packages".format(len(kt_packages)))
 
     for p in kt_packages:
+        if kt_processed.get(packageid):
+            continue
+
         if 'pricelist' in p:
             if 'errors' in p['pricelist']:
                 #print("{} has pricelist".format(p['id']))
                 #print("\tERROR Found: {}".format(p['pricelist']['errors']))    
                 error_count += p['pricelist']['errors']
-        if error_count > 0:
-            print("Load errors found, rerunning {}".format(error_count))
-            kt_pricelist = kt.get_extract(savepath, kt_packages, tax_profiles, occupancy, debug)
-            data['pricelist'] = kt_pricelist
-            save_pickle_data(data, pickle_file)
+
+    if error_count > 0:
+        print("Load errors found, rerunning {}".format(error_count))
+        kt_pricelist = kt.get_extract(savepath, kt_packages, tax_profiles, occupancy, debug)
+        data['pricelist'] = kt_pricelist
+        save_pickle_data(data, pickle_file)
 
 else:
     # do a short load....

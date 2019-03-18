@@ -121,6 +121,9 @@ def extract_rows(node, fields):
 def copy_pickles(savepath):
     for f in scanfiles('.', r'.*\.pickle'):
         fpart = f['file'].split('.')
+        if len(fpart) != 2:
+            continue
+
         fdate = datetime.strptime(f['modified'], '%Y-%m-%d %H:%M:%S')
         newname = '{}.{}.{}.{}'.format(fpart[0], hostname, fdate.strftime('%Y%m%d%H%M'), fpart[-1])
         if not os.path.exists(newname):
@@ -142,6 +145,8 @@ def scan_packagefiles(savepath):
             try:
                 json_data = load_json(os.path.join(f.get('folder'), f.get('file')))
                 data[packageid] = json_data
+                data[packageid]['file'] = f.copy()
+
             except Exception as ex:
                 print("skipping file {}\n{}".format(f, ex))
     return data
@@ -154,8 +159,17 @@ if __name__ == "__main__":
     savepath = os.path.join(homepath, *datapaths)
     scan_packagefiles(savepath, )
 
-    kt_processed = scan_packagefiles(savepath)
-    print(len(kt_processed))
+    copypickle = True
+
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    print("Timestamp: {}".format(timestamp))
+    if copypickle:
+        copy_pickles(savepath)
+    else:
+        kt_processed = scan_packagefiles(savepath)
+        print(len(kt_processed))
+        filepath = os.path.join(savepath, "data", "kt_preocessed__{}.json".format(timestamp))
+        save_json(filepath, kt_processed)
 
 
 

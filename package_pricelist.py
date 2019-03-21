@@ -9,7 +9,7 @@ from time import time
 from datetime import datetime
 
 reload = True
-checkdumps = True
+checkdumps = False
 
 homepath = os.path.expanduser("~")
 datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]

@@ -9,6 +9,7 @@ from datetime import datetime
 import socket
 import csv
 
+update = False
 hostname = socket.gethostname()
 homepath = os.path.expanduser("~")
 datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
@@ -20,8 +21,11 @@ data = get_pickle_data(pickle_file)
 datestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 # get the processed files data:
-kt_processed = scan_packagefiles(savepath)
-print("Found {} fresh price packages".format(len(kt_processed)))
+if update:
+    kt_processed = scan_packagefiles(savepath)
+    print("Found {} fresh price packages".format(len(kt_processed)))
+else:
+    kt_processed = {}
 
 kt_packages = data.get('packages', {})
 print("Found {} cached packages".format(len(kt_packages)))
@@ -49,19 +53,7 @@ print("Packages: {}\n\tskipped: {}\n\tChanged: {}".format(package_count, len(kt_
 if change_count > 0:
     data['packages'] = kt_packages
     save_pickle_data(data, pickle_file)
-"""
-change_count = 0
-for packageid in kt_skipped:
-    p_data = kt_processed.get(packageid, {})
-    kt_packages.append(p_data)
-    change_count += 1
 
-print("Packages: {}\n\tChanged: {}".format(len(kt_packages), change_count))
-
-if change_count > 0:
-    data['packages'] = kt_packages
-    save_pickle_data(data, pickle_file)
-"""
 kt_error = []
 kt_1040 = []
 kt_1020 = []
@@ -73,7 +65,7 @@ error_count = 0
 tax_profiles = data.get('tax_profiles', {})
 
 #for p_value in kt_packages:
-for p_key, p_value in kt_processed.items():
+for p_value in kt_packages:
     packageid = p_value.get('id')
     datestamp = p_value.get('updated')
     hostname = p_value.get('hostname')

@@ -54,7 +54,24 @@ if 'packages' in data:
 
 print("Loaded {} packages".format(len(kt_packages)))
 
+
+print("Error report ")
+error_logs = []
 for p in kt_packages:
+    p_row = {}
+    p_row['packageid'] = p.get('id')
+    p_row['packagename'] = p.get('external_name')
+    p_row['packagerecordtype'] = p.get('record_type_name')
+    p_row['packagelength'] = p.get('length')
+    p_row['packagedatecount'] = len(p.get('dates', {}))
+
+    for d_key, d_value in p.get('pricelist').items():
+        if d_key == 'errors':
+            continue
+        for t_key, t_value in d_value.items():
+            for o_key, o_value in t_value.items():
+                pass
+                
     if 'pricelist' in p:
         if 'errors' in p['pricelist']:
             print("{} has pricelist".format(p['id']))

@@ -279,7 +279,7 @@ else:
 
 # now to load the data into the 
 year = 2020
-version = "1.0"
+version = "1.1"
 
 excel_feed_path = os.path.join(savepath, 'templates', r'Rocky Bulk Cost Loader template.xlsx')
 bulk_file_name = 'Rocky Bulk Loader.{}.{}.xlsx'.format(year, version)

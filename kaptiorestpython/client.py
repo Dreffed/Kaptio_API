@@ -236,7 +236,7 @@ class KaptioClient:
         r = self.api_data( url_data, paramstr, querystr)
         if r.status_code == 200:
             data = self.save_response(savepath, url_data['name'], r, packageid)
-            display_fields(data)
+            #display_fields(data)
         else:
             print("Failed: {} => {}".format(r, r.text))    
         return data

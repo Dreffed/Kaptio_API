@@ -106,7 +106,7 @@ class KaptioClient:
 
         return data
 
-    def save_response(self, savepath, base_name, resp, field_name):
+    def save_response(self, savepath, base_name, resp, field_name, logging=None, debug=None):
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         json_data = json.loads(resp.text)
         suffix_name = field_name
@@ -121,7 +121,7 @@ class KaptioClient:
         json_data = json.loads(resp.text)
         return json_data
         
-    def get_channels(self, savepath):
+    def get_channels(self, savepath, logging=None, debug=None):
         url_data = {}
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         url_data['name'] = "Channels"
@@ -132,12 +132,11 @@ class KaptioClient:
         querystr = ''
 
         data = self.api_list(url_data, paramstr, querystr)
-        print("found: {}".format(len(data)))
         file_path = os.path.join(savepath, "data", "kt_channels_{}.json".format(timestamp))
         save_json(file_path, data)
         return data
 
-    def get_client(self, savepath):
+    def get_client(self, savepath, logging=None, debug=None):
         url_data = {}
         url_data['name'] = "Client"
         url_data['version'] = 'v1.0'
@@ -154,7 +153,7 @@ class KaptioClient:
             print("Failed: {} => {}".format(r, r.text))    
         return data
 
-    def get_package(self, savepath, packageid):
+    def get_package(self, savepath, packageid, logging=None, debug=None):
         url_data = {}
         url_data['name'] = "Package"
         url_data['version'] = 'v1.0'
@@ -163,15 +162,16 @@ class KaptioClient:
         paramstr = '/{}'.format(packageid)
         querystr = ''
 
-        r = self.api_data( url_data, paramstr, querystr)
+        r = self.api_data(url_data, paramstr, querystr)
         if r.status_code == 200:
             data = self.save_response(savepath, url_data['name'], r, 'id')
-            display_fields(data)
+            if debug:
+                display_fields(data)
         else:
             print("Failed: {} => {}".format(r, r.text))
         return data
 
-    def get_packages(self, savepath):
+    def get_packages(self, savepath, logging=None, debug=None):
         # build out all the packages
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         url_data = {}
@@ -183,12 +183,11 @@ class KaptioClient:
         querystr = ''
 
         data = self.api_list( url_data, paramstr, querystr)
-        #print("found: {}".format(len(data)))
         file_path = os.path.join(savepath, "data", "kt_packages_{}.json".format(timestamp))
         save_json(file_path, data)
         return data
         
-    def get_search(self, savepath, packageid, search_values):
+    def get_search(self, savepath, packageid, search_values, logging=None, debug=None):
         # search for a range of packages
         save_str = ''
         search_list = []
@@ -216,7 +215,7 @@ class KaptioClient:
             print("Failed: {} => {}".format(r, r.text))    
         return data
 
-    def get_packageadv(self, savepath, packageid, search_values):
+    def get_packageadv(self, savepath, packageid, search_values, logging=None, debug=None):
         search_list = []
         querystr = ''
         for key, value in search_values.items():
@@ -241,7 +240,7 @@ class KaptioClient:
             print("Failed: {} => {}".format(r, r.text))    
         return data
 
-    def get_packagedepartures(self, savepath, packageid, datefrom, dateto):
+    def get_packagedepartures(self, savepath, packageid, datefrom, dateto, logging=None, debug=None):
         url_data = {}
         url_data['name'] = "Package Search"
         url_data['version'] = 'v1.0'
@@ -261,12 +260,11 @@ class KaptioClient:
         r = self.api_data( url_data, paramstr, querystr)
         if r.status_code == 200:
             data = self.save_response(savepath, url_data['name'], r, packageid)
-            #print("Found {} dates".format(len(data)))
         else:
             print("Failed: {} => {}".format(r, r.text))    
         return data
 
-    def get_item(self, savepath, itemid):
+    def get_item(self, savepath, itemid, logging=None, debug=None):
         url_data = {}
         url_data['name'] = "Item"
         url_data['version'] = 'v1.0'
@@ -284,7 +282,7 @@ class KaptioClient:
 
         return data
 
-    def get_items(self, savepath):
+    def get_items(self, savepath, logging=None, debug=None):
         # get all the items
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         url_data = {}
@@ -296,7 +294,6 @@ class KaptioClient:
         querystr = ''
 
         data = self.api_list( url_data, paramstr, querystr)
-        print("found: {}".format(len(data)))
         file_path = os.path.join(data, "data", "kt_items_{}.json".format(timestamp))
         try:
             save_json(file_path, data)
@@ -304,7 +301,7 @@ class KaptioClient:
             pass
         return data
 
-    def get_servicelevels(self, savepath):
+    def get_servicelevels(self, savepath, logging=None, debug=None):
         # get all the servicelevels
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
@@ -317,14 +314,18 @@ class KaptioClient:
         querystr = ''
 
         data = self.api_list( url_data, paramstr, querystr)
-        print("found: {}".format(len(data)))
-        file_path = os.path.join(savepath, "data", "kt_servicelevels_{}.json".format(timestamp))
-        try:
-            save_json(file_path, data)
-        except: 
-            pass
+        if debug:
+            print("found: {}".format(len(data)))
+        
+        if logging:
+            file_path = os.path.join(savepath, "data", "kt_servicelevels_{}.json".format(timestamp))
+            try:
+                save_json(file_path, data)
+            except: 
+                pass
+        return data
 
-    def get_langauages(self, savepath):
+    def get_languages(self, savepath):
         # get all the languages
         url_data = {}
         url_data['name'] = "All Languages"
@@ -335,7 +336,6 @@ class KaptioClient:
         querystr = ''
 
         data = self.api_list( url_data, paramstr, querystr)
-        print("found: {}".format(len(data)))
         file_path = os.path.join(savepath, "data", "kt_lauguages.json")
         try:
             save_json(file_path, data)
@@ -438,7 +438,7 @@ class KaptioClient:
 
         return {'data':data, 'errors':errors}
 
-    def walk_package(self, savepath, packageid, dates, tax_profiles, occupancy, services, debug=False):
+    def walk_package(self, savepath, packageid, dates, tax_profiles, occupancy, services, logging=None, debug=False):
         """
         if not isinstance(dates, list):
             raise "[dates] should be a list of date strings 'YYYY-mm-dd'"

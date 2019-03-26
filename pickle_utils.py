@@ -62,8 +62,32 @@ if check_updates and  'updates' in data:
     count_fixed = len(data.get('updates', {}).get('prices', []))
     print("Updates\n\t1040\t{}\n\t1020\t{}\n\tFixed\t{}".format(count_1040, count_1020, count_fixed))
 
+    packageids = set()
+    tentwentyids = set()
+
     for n_item in data.get('updates', {}).get('prices', []):
         #print(len(n_item))
-        pass
+        """ 
+            'packageid': packageid,
+            'date': d_key,
+            'tax_profile_id': taxprofileid,
+            'tax_profile': t_key,
+            'occupancy': o_key,
+            'occupancy_id': occ_str,
+            'service_level_id': p_item.get('service_level_id'),
+            'service_level': sl_rev.get(p_item.get('service_level_id'),{}).get('name'),
+            'code': e_code,
+            'message': e_item.get('error', {}).get('message') 
+            'data': array of prices found, should be one only
+        """
+        packageids.add(n_item.get('packageid'))
+    
+    for n_item in data.get('updates', {}).get('logs', {}).get('1020'):
+        tentwentyids.add(n_item.get('packageid'))
 
+    stillids = tentwentyids.difference(packageids)
+
+    for id in stillids:
+        print(id)
+        
 display_data(pickle_file, data, "Updated")

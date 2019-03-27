@@ -183,8 +183,10 @@ class KaptioClient:
         querystr = ''
 
         data = self.api_list( url_data, paramstr, querystr)
-        file_path = os.path.join(savepath, "data", "kt_packages_{}.json".format(timestamp))
-        save_json(file_path, data)
+        if logging:
+            file_path = os.path.join(savepath, "data", "kt_packages_{}.json".format(timestamp))
+            save_json(file_path, data)
+            
         return data
         
     def get_search(self, savepath, packageid, search_values, logging=None, debug=None):

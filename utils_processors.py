@@ -87,6 +87,20 @@ def init_partial(config, data, kt, savepath):
 
     return data
 
+def process_packages(config, data, kt, savepath):
+    if not data:
+        data = {}
+
+    if not 'packages' in data:
+        data['packages'] = {}
+
+    log = config.get('flags', {}).get('switches', {}).get('logging')
+    debug = config.get('flags', {}).get('switches', {}).get('debug')
+
+    data['packages'] = kt.get_packages(savepath, logging=log, debug=debug)
+
+    return data
+
 def promote_custom(config, data, kt, savepath):
     if not data:
         data = {}

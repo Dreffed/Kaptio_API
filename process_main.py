@@ -1,7 +1,7 @@
 from kaptiorestpython.client import KaptioClient, load_kaptioconfig
 from utils import get_pickle_data, save_pickle_data, save_json, scanfiles, load_json, extract_rows
 from utils_config import get_folderpath, load_config, get_configuration_path
-from utils_processors  import load_metadata, init_partial, promote_custom, process_dates, process_prices
+from utils_processors  import load_metadata, init_partial, promote_custom, process_dates, process_prices, process_packages
 import json
 import pickle
 import os
@@ -49,7 +49,7 @@ if log:
 function_swtich = {
     'partial': init_partial,
     'metadata': load_metadata,
-    #'packages': process_packages,
+    'packages': process_packages,
     'custom': promote_custom,
     'dates': process_dates,
     'prices': process_prices,

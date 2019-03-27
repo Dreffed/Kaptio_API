@@ -177,6 +177,8 @@ def process_prices(config, data, kt, savepath):
             if not reload:
                 continue
         
+        if not p_value.get('active'):        
+            continue        
 
         dates = []
         for d in p_value.get('package_dates', []):

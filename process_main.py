@@ -38,7 +38,8 @@ def main():
         "localpath": PATHS.get('LOCAL', os.getcwd()),
         "pid": os.getpid(),
         "date": datetime.now().strftime("%Y-%m-%d-%H-%M-%S"),
-        "server": socket.gethostname()
+        "server": socket.gethostname(),
+        "processes": []
     }
 
     logger.info("Timestamp: {}".format(run_data.get('_runs',{}).get('timestamp')))
@@ -77,12 +78,6 @@ def main():
         #'xml': process_xml
     }
 
-    if not data.get('_runs'):
-        data['_runs'] = {}
-
-    run_name = "{}-{}".format(run_data.get('hostname'), run_data.get('date'))
-    data['_runs'][run_name] = run_data
-
     if logger.level == logging.DEBUG and len(data)> 0:
         logger.info("Data keys loaded...")
         for key, value in data.items():
@@ -95,6 +90,7 @@ def main():
 
     for process in config.get('process', []):
         logger.info("Running: {}".format(process))
+        run_data['processes'].append(process)
         try:
             if function_switch.get(process):
                 data = function_switch.get(process)(config, data, kt, savepath)
@@ -103,6 +99,14 @@ def main():
         except Exception as ex:
             logger.error('=== ERROR: {} => {}'.format(process, ex))
             break
+
+    run_data['end'] = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+
+    if not data.get('_runs'):
+        data['_runs'] = {}
+
+    run_name = "{}-{}".format(run_data.get('hostname'), run_data.get('date'))
+    data['_runs'][run_name] = run_data
 
     logger.info("Data keys loaded...")
     for key, value in data.items():

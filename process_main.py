@@ -49,7 +49,7 @@ packageid = 'a754F0000000A30QAE'
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 logger.info("Timestamp: {}".format(timestamp))
 
-function_swtich = {
+function_switch = {
     'partial': init_partial,
     'metadata': load_metadata,
     'packages': process_packages,
@@ -80,11 +80,15 @@ else:
     logger.info('Clean data file...')
 
 for process in config.get('process', []):
-    #try:
-    if function_swtich.get(process):
-        data = function_swtich.get(process)(config, data, kt, savepath)
-    #except Exception as ex:
-    #    logger.info('=== ERROR: {} => {}'.format(process, ex))
+    logger.info("Running: {}".format(process))
+    try:
+        if function_switch.get(process):
+            data = function_switch.get(process)(config, data, kt, savepath)
+        else:
+            logging.warning("no process defined for {}".format(process))
+    except Exception as ex:
+        logger.error('=== ERROR: {} => {}'.format(process, ex))
+        break
 
 logger.info("Data keys loaded...")
 for key, value in data.items():

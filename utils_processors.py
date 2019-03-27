@@ -58,7 +58,10 @@ def load_metadata(config, data, kt, savepath):
 
     logger.info("loaded metadata")
     for key, value in data.items():
-        logger.info("\t{} => {} [{}]".format(key, len(value), type(value)))
+        if value:
+            logger.info("\t{} => {} [{}]".format(key, len(value), type(value)))
+        else:
+            logger.info("\t{} : No Values".format(key))
 
     return data
 
@@ -76,7 +79,7 @@ def init_partial(config, data, kt, savepath):
             data['packages'][pkg_id] = kt.get_package(savepath, pkg_id)
         except Exception as ex:
             if config.get('flags', {}).get('switches', {}).get('errors'):
-                logger.info('=== ERROR: {} => {}'.format(pkg_id, ex))
+                logger.error('=== ERROR: {} => {}'.format(pkg_id, ex))
 
             data['packages'][pkg_id] = {
                 'error': ex
@@ -109,7 +112,7 @@ def promote_custom(config, data, kt, savepath):
                     logger.info("\t{} => {}:{}".format(p_key, c_key, c_value))
         except Exception as ex:
             if config.get('flags', {}).get('switches', {}).get('errors'):
-                logger.info('=== ERROR: {}:\n{}\n===\n\t => {}'.format(p_key, p_value, ex))
+                logger.error('=== ERROR: {}:\n{}\n===\n\t => {}'.format(p_key, p_value, ex))
 
     return data
 

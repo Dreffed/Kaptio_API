@@ -168,8 +168,6 @@ def process_prices(config, data, kt, savepath):
     
     package_field = 'packages'
     key_field = 'package_pricelist'
-    log = config.get('flags', {}).get('switches', {}).get('logging')
-    debug = config.get('flags', {}).get('switches', {}).get('debug')
 
     logger.info("loading prices...")
 
@@ -178,6 +176,7 @@ def process_prices(config, data, kt, savepath):
         if p_value.get(key_field, []):
             if not reload:
                 continue
+        
 
         dates = []
         for d in p_value.get('package_dates', []):
@@ -200,9 +199,7 @@ def process_prices(config, data, kt, savepath):
             dates=dates, 
             tax_profiles=tax_profiles, 
             occupancy=occupancy, 
-            services=services, 
-            logger=log,
-            debug=debug
+            services=services
         )
         logger.info("\tloaded {} dates".format(len(data.get(package_field, {}).get(p_key,{}).get(key_field, []))))
 

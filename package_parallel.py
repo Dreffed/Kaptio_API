@@ -6,6 +6,10 @@ import os
 import path
 from time import time
 from datetime import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 homepath = os.path.expanduser("~")
 datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
@@ -24,7 +28,7 @@ data = get_pickle_data(pickle_file)
 
 packageid = 'a754F0000000A30QAE'
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-print("Timestamp: {}".format(timestamp))
+logger.info("Timestamp: {}".format(timestamp))
 
 tax_profiles = data['tax_profiles']
 occupancy = data['occupancy']

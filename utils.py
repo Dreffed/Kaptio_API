@@ -7,18 +7,22 @@ import sys
 import time
 import re
 from datetime import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # helper functions
 def get_pickle_data(pickleName):
     data = {}
     if os.path.exists(pickleName):
-        print('Loading Saved Data... [%s]' % pickleName)
+        logger.info('Loading Saved Data... [%s]' % pickleName)
         with open(pickleName, 'rb') as handle:
             data = pickle.load(handle)
     return data
 
 def save_pickle_data(data, pickleName):
-    print('Saving Data... [%s]' % pickleName)
+    logger.info('Saving Data... [%s]' % pickleName)
     with open(pickleName, 'wb') as handle:
         pickle.dump(data, handle)
 
@@ -40,7 +44,7 @@ def get_fileinfo(filename):
         file_size = file_stats[stat.ST_SIZE]
         
     except Exception as e:
-        print("ERROR: fileinfo {}".format(e))
+        logger.info("ERROR: fileinfo {}".format(e))
         mod_time, acc_time, file_size = ["", "", 0]
         
     return mod_time, acc_time, file_size
@@ -49,7 +53,7 @@ def scanfiles(folder, filter = None):
     for dirpath, _, filenames in os.walk(folder):
         for filename in filenames:
             filepath = os.path.join(dirpath, filename)
-            #print(filename)
+            logger.debug(filename)
 
             m_data = None
             if filter is not None:
@@ -57,7 +61,7 @@ def scanfiles(folder, filter = None):
                     filter = re.compile(filter)
                 m = re.search(filter, filename)
                 if not m:
-                    #print("Skipping: {}".format(filename))
+                    logger.debug("Skipping: {}".format(filename))
                     continue
 
                 m_data = [m.groupdict() for m in filter.finditer(filename)]
@@ -77,7 +81,7 @@ def scanfiles(folder, filter = None):
 
                 yield data
             except Exception as e:
-                print("ERROR: scan files failed {}".format(e))
+                logger.info("ERROR: scan files failed {}".format(e))
 
 def extract_rows(node, fields):
     """ 
@@ -92,7 +96,7 @@ def extract_rows(node, fields):
     row = {}
     if not isinstance(node, dict):
         return row
-    #print("====\n{}".format(fields))
+    logger.debug("====\n{}".format(fields))
     for key, value in node.items():
         celldata = value
         if key in fields:
@@ -127,11 +131,11 @@ def copy_pickles(savepath):
         fdate = datetime.strptime(f['modified'], '%Y-%m-%d %H:%M:%S')
         newname = '{}.{}.{}.{}'.format(fpart[0], hostname, fdate.strftime('%Y%m%d%H%M'), fpart[-1])
         if not os.path.exists(newname):
-            print("Creating copy: {} => {}".format(f['file'], newname))
+            logger.info("Creating copy: {} => {}".format(f['file'], newname))
             shutil.copy(f['file'], newname)
         dstpath = os.path.join(savepath, 'config', newname)
         if not os.path.exists(dstpath):
-            print("Copy to share: {} => {}".format(f['file'], newname))
+            logger.info("Copy to share: {} => {}".format(f['file'], newname))
             shutil.copy(f['file'], dstpath)
 
 def scan_packagefiles(savepath):
@@ -148,7 +152,7 @@ def scan_packagefiles(savepath):
                 data[packageid]['file'] = f.copy()
 
             except Exception as ex:
-                print("skipping file {}\n{}".format(f, ex))
+                logger.info("skipping file {}\n{}".format(f, ex))
     return data
 
 if __name__ == "__main__":
@@ -162,12 +166,12 @@ if __name__ == "__main__":
     copypickle = True
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    print("Timestamp: {}".format(timestamp))
+    logger.info("Timestamp: {}".format(timestamp))
     if copypickle:
         copy_pickles(savepath)
     else:
         kt_processed = scan_packagefiles(savepath)
-        print(len(kt_processed))
+        logger.info(len(kt_processed))
         filepath = os.path.join(savepath, "data", "kt_preocessed__{}.json".format(timestamp))
         save_json(filepath, kt_processed)
 

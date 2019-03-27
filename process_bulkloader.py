@@ -15,6 +15,10 @@ import os
 import path
 from time import time
 from datetime import datetime, timedelta
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def load_WB(path):    
     # process each sheet...
@@ -27,7 +31,7 @@ def load_WB(path):
 homepath = os.path.expanduser("~")
 datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
 savepath = os.path.join(homepath, *datapaths)
-print(savepath)
+logger.info(savepath)
 
 kaptio_config_file = os.path.join(savepath, "config", "kaptio_settings.json")
 kaptio_config = load_kaptioconfig(kaptio_config_file)
@@ -49,13 +53,13 @@ kt = KaptioOGraph(baseurl, sfurl, username, password, security_token, sandbox, c
 pickle_file = "kaptio_allsell.pickle"
 data = get_pickle_data(pickle_file)
 
-print("Available items:")
+logger.info("Available items:")
 for key, value in data.items():
-    print("\t{}".format(key))
+    logger.info("\t{}".format(key))
 
 packageid = 'a754F0000000A30QAE'
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-print("Timestamp: {}".format(timestamp))
+logger.info("Timestamp: {}".format(timestamp))
 
 tax_profiles = data['tax_profiles']
 occupancy = data['occupancy']
@@ -83,7 +87,7 @@ for p in kt_packages:
             row['packagestart'] = p['start_location']['name']
 
     packagerows.append(row)
-print("Found {} packages".format(len(packagerows)))
+logger.info("Found {} packages".format(len(packagerows)))
 
 
 error_list = []
@@ -174,9 +178,9 @@ for row in packagerows:
                                         r_err['details'] = err['error']['details']
                                         error_list.append(r_err)
                             except Exception as ex:
-                                print('Error: {}'.format(ex))
-                                print(json.dumps(row, indent=4))
-                                print(json.dumps(o_value, indent=4))
+                                logger.info('Error: {}'.format(ex))
+                                logger.info(json.dumps(row, indent=4))
+                                logger.info(json.dumps(o_value, indent=4))
                     # pivot the occupancy data...
                     # we should have a dict with key of occupancy key and a row for each service level...
                     for s_key, s_value in service_levels.items():
@@ -205,7 +209,7 @@ for row in packagerows:
                         r = {**b, **s}
                         price_data.append(r)
 
-print("Rows: {} => Errors: {}".format(len(price_data), len(error_list)))
+logger.info("Rows: {} => Errors: {}".format(len(price_data), len(error_list)))
 
 
 if not os.path.exists(configxl_path):
@@ -286,30 +290,30 @@ bulk_file_name = 'Rocky Bulk Loader.{}.{}.xlsx'.format(year, version)
 
 row_idx = excel_config['start_row']-1
 
-print('=== Styles ===')
+logger.info('=== Styles ===')
 style_fills = {}
 if 'fills' in excel_config:
-    print('\t=== Files ===')
+    logger.info('\t=== Files ===')
     for key in excel_config['fills']:
-        print('\t\t{} -> {}'.format(key, excel_config['fills'][key]))
+        logger.info('\t\t{} -> {}'.format(key, excel_config['fills'][key]))
         style_fills[key] = PatternFill(**excel_config['fills'][key])
-        #print(style_fills[key])
+        logger.debug(style_fills[key])
 
 style_fonts = {}
 if 'fonts' in excel_config:
-    print('\t=== Fonts ===')
+    logger.info('\t=== Fonts ===')
     for key in excel_config['fonts']:
-        print('\t\t{} -> {}'.format(key, excel_config['fonts'][key]))
+        logger.info('\t\t{} -> {}'.format(key, excel_config['fonts'][key]))
         style_fonts[key] = Font(**excel_config['fonts'][key])
-        #print(style_fonts[key])
+        logger.debug(style_fonts[key])
 
 style_sides = {}
 if 'sides' in excel_config:
-    print('\t=== Sides ===')
+    logger.info('\t=== Sides ===')
     for key in excel_config['sides']:
-        print('\t\t{} -> {}'.format(key, excel_config['sides'][key]))
+        logger.info('\t\t{} -> {}'.format(key, excel_config['sides'][key]))
         style_sides[key] = Side(**excel_config['sides'][key])
-        #print(style_sides[key])
+        logger.debug(style_sides[key])
 
 wb = load_WB(excel_feed_path)
 ws = wb[excel_config['sheetname']]
@@ -377,4 +381,4 @@ for row in price_data:
 excel_save_path = os.path.join(savepath, 'data', bulk_file_name)
 wb.save(excel_save_path)
 
-print('Document saved... {}'.format(excel_save_path))
+logger.info('Document saved... {}'.format(excel_save_path))

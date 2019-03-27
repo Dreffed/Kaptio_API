@@ -5,6 +5,10 @@ import os
 import path
 from time import time
 from datetime import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 update_lookups = False
 
@@ -14,16 +18,16 @@ savepath = os.path.join(homepath, *datapaths)
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
 pickle_files = scanfiles('.', r".*\.pickle")
-print("Pickles:")
+logger.info("Pickles:")
 for f in pickle_files:
-    print("\t{} => {} [{}]".format(f['file'], f['folder'], json.dumps(f, indent=2)))
+    logger.info("\t{} => {} [{}]".format(f['file'], f['folder'], json.dumps(f, indent=2)))
 
 pickle_file = "kaptio_allsell.pickle"
 
 data = get_pickle_data(pickle_file)
 
 for key, value in data.items():
-    print(key)
+    logger.info(key)
 
 if update_lookups:
     tax_profiles = {
@@ -52,10 +56,10 @@ kt_packages = []
 if 'packages' in data:
     kt_packages = data['packages']
 
-print("Loaded {} packages".format(len(kt_packages)))
+logger.info("Loaded {} packages".format(len(kt_packages)))
 
 
-print("Error report ")
+logger.info("Error report ")
 error_logs = []
 for p in kt_packages:
     p_row = {}
@@ -74,8 +78,8 @@ for p in kt_packages:
                 
     if 'pricelist' in p:
         if 'errors' in p['pricelist']:
-            print("{} has pricelist".format(p['id']))
-            print("\tERROR Found: {}".format(p['pricelist']['errors']))
+            logger.info("{} has pricelist".format(p['id']))
+            logger.info("\tERROR Found: {}".format(p['pricelist']['errors']))
 
 if 'content' in data:
     kt_content = data['content']
@@ -87,7 +91,7 @@ for key, value in kt_content.items():
             row = extract_rows(item, fields) 
             rows.append(row)
 
-print(len(rows))
+logger.info(len(rows))
 
 file_path = os.path.join(savepath, "data", "kt_contents_{}.json".format(timestamp))
 save_json(file_path, kt_content)

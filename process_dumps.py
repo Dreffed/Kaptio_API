@@ -1,5 +1,9 @@
 from utils import get_pickle_data, save_pickle_data, save_json, scanfiles
 import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 homepath = os.path.expanduser("~")
 datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
@@ -19,13 +23,13 @@ for f in scanfiles(savepath):
         data['names'][f['file']] = []
     data['names'][f['file']].append(f)
 
-print("found {} files.".format(len(data['names'])))
+logger.info("found {} files.".format(len(data['names'])))
 
 save_pickle_data(data, pickle_file)
 
 #savepath = r"c:\Users\dgloyncox\git\dreffed\Kaptio_API"
-print("scanning folder {}".format(savepath))
+logger.info("scanning folder {}".format(savepath))
 for dirpath, _, filenames in os.walk(savepath):
-    print(dirpath, len(filenames))
+    logger.info(dirpath, len(filenames))
 
 

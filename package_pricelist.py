@@ -1,5 +1,6 @@
 # load the dependancies
-from kaptiorestpython.client import KaptioClient, load_kaptioconfig
+from kaptiorestpython.client import KaptioClient
+from kaptiorestpython.utils_kaptio import  load_kaptioconfig
 from utils import get_pickle_data, save_pickle_data, save_json, scanfiles, scan_packagefiles
 import json
 import pickle
@@ -7,6 +8,10 @@ import os
 import path
 from time import time
 from datetime import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 reload = True
 checkdumps = False
@@ -28,7 +33,7 @@ data = get_pickle_data(pickle_file)
 
 packageid = 'a754F0000000A30QAE'
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-print("Timestamp: {}".format(timestamp))
+logger.info("Timestamp: {}".format(timestamp))
 
 tax_profiles = data['tax_profiles']
 occupancy = data['occupancy']
@@ -45,7 +50,7 @@ if checkdumps:
 if 'pricelist' in data and not reload:
     error_count = 0
     kt_pricelist = data['pricelist']
-    print("Loaded {} packages".format(len(kt_packages)))
+    logger.info("Loaded {} packages".format(len(kt_packages)))
 
     for p in kt_packages:
         if kt_processed.get(packageid):
@@ -53,12 +58,12 @@ if 'pricelist' in data and not reload:
 
         if 'pricelist' in p:
             if 'errors' in p['pricelist']:
-                #print("{} has pricelist".format(p['id']))
-                #print("\tERROR Found: {}".format(p['pricelist']['errors']))    
+                logger.debug("{} has pricelist".format(p['id']))
+                logger.debug("\tERROR Found: {}".format(p['pricelist']['errors']))    
                 error_count += p['pricelist']['errors']
 
     if error_count > 0:
-        print("Load errors found, rerunning {}".format(error_count))
+        logger.info("Load errors found, rerunning {}".format(error_count))
         kt_pricelist = kt.get_extract(savepath, kt_packages, tax_profiles, occupancy, debug)
         data['pricelist'] = kt_pricelist
         save_pickle_data(data, pickle_file)

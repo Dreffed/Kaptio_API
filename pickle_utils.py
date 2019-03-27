@@ -5,11 +5,15 @@ import os
 import path
 from time import time
 from datetime import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def display_data(pickle_file, data, name):
-    print("{}: {}".format(name, pickle_file))
+    logger.info("{}: {}".format(name, pickle_file))
     for key, value in data.items():
-        print("\t{} => {}".format(key, len(value)))
+        logger.info("\t{} => {}".format(key, len(value)))
 
 scan_local = False
 scan_remote = False
@@ -23,14 +27,14 @@ savepath = os.path.join(homepath, *datapaths)
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
 if scan_local:
-    print("Local Pickles:")
+    logger.info("Local Pickles:")
     for f in scanfiles('.', r".*\.pickle"):
-        print("\t{} => {}".format(f['file'], f['folder']))
+        logger.info("\t{} => {}".format(f['file'], f['folder']))
 
 if scan_remote:
-    print("Remote Pickles:")
+    logger.info("Remote Pickles:")
     for f in scanfiles(os.path.join(savepath, 'config'), r".*\.pickle"):
-        print("\t{} => {}".format(f['file'], f['folder']))
+        logger.info("\t{} => {}".format(f['file'], f['folder']))
 
 pickle_file = "kaptio_allsell.pickle"
 
@@ -44,12 +48,12 @@ data_src = get_pickle_data(source_pickle_file)
 display_data(source_pickle_file, data_src, "Remote")
 
 if get_remote_content and 'content' in data_src:
-    print("Fetching remote cached content")
+    logger.info("Fetching remote cached content")
     kt_content = data_src.get('content')
 
     if kt_content:
         data['content'] = kt_content
-        print("Retrieved remote cached content")
+        logger.info("Retrieved remote cached content")
 
         save_pickle_data(data, pickle_file)
 
@@ -60,13 +64,13 @@ if check_updates and  'updates' in data:
     count_1020 = len(data.get('updates', {}).get('logs', {}).get('1020', []))
     count_1040 = len(data.get('updates', {}).get('logs', {}).get('1040', []))
     count_fixed = len(data.get('updates', {}).get('prices', []))
-    print("Updates\n\t1040\t{}\n\t1020\t{}\n\tFixed\t{}".format(count_1040, count_1020, count_fixed))
+    logger.info("Updates\n\t1040\t{}\n\t1020\t{}\n\tFixed\t{}".format(count_1040, count_1020, count_fixed))
 
     packageids = set()
     tentwentyids = set()
 
     for n_item in data.get('updates', {}).get('prices', []):
-        #print(len(n_item))
+        logger.debug(len(n_item))
         """ 
             'packageid': packageid,
             'date': d_key,
@@ -88,6 +92,6 @@ if check_updates and  'updates' in data:
     stillids = tentwentyids.difference(packageids)
 
     for id in stillids:
-        print(id)
+        logger.info(id)
         
 display_data(pickle_file, data, "Updated")

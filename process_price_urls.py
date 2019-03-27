@@ -8,6 +8,10 @@ import path
 from time import time
 from datetime import datetime
 import re
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 homepath = os.path.expanduser("~")
 datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
@@ -26,7 +30,7 @@ data = get_pickle_data(pickle_file)
 
 packageid = 'xxxxxxxxxxxxxxxxx'
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-print("Timestamp: {}".format(timestamp))
+logger.info("Timestamp: {}".format(timestamp))
 
 if 'tax_profiles' in data:
     tax_profiles = data['tax_profiles']
@@ -43,7 +47,7 @@ filepath = os.path.join(savepath, 'data', 'kt_priceerrors_20190314233403.json' )
 with open(filepath, 'r') as fp:
     kt_errorlist = json.load(fp)
 
-print("processing {} query strs".format(len(kt_errorlist)))
+logger.info("processing {} query strs".format(len(kt_errorlist)))
 
 re_q = re.compile(r"id==([a-zA-Z0-9]+)[&]{0,1}")
 kt_pricesres = {}
@@ -69,7 +73,7 @@ for q in kt_errorlist:
             q = q.replace(old_tp, search_values['tax_profile_id'])
 
     try:
-        p = kt.get_packageprice_query(savepath, packageid, q, debug=True)
+        p = kt.get_packageprice_query(savepath, packageid, q)
         if not packageid in kt_pricesres:
             kt_pricesres[packageid] = []
         p_data = {
@@ -79,7 +83,7 @@ for q in kt_errorlist:
         kt_pricesres[packageid].append(p_data)
         processed +1
     except Exception as ex:
-        print("ERROR: {}\n\t{}\n\t{}".format(q,search_values,ex))
+        logger.info("ERROR: {}\n\t{}\n\t{}".format(q,search_values,ex))
         errorlist.append({
             "q":q,
             "search_vlaues":search_values,
@@ -87,9 +91,9 @@ for q in kt_errorlist:
         })
         errors += 1
     if progress % 100 == 0:
-        print("{}/{} :: E:{}".format(processed, progress, errors))
+        logger.info("{}/{} :: E:{}".format(processed, progress, errors))
 
-print("Fetched {} prices".format(len(kt_pricesres)))
+logger.info("Fetched {} prices".format(len(kt_pricesres)))
 
 file_path = os.path.join(savepath, "data", "kt_priceres_{}.json".format(timestamp))
 save_json(file_path, kt_pricesres)

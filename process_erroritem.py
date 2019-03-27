@@ -8,6 +8,10 @@ import os
 import path
 from time import time
 from datetime import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 homepath = os.path.expanduser("~")
 datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
@@ -26,14 +30,14 @@ kt = KaptioClient(baseurl, kaptio_config['api']['auth']['key'], kaptio_config['a
 pickle_file = "kaptio_allsell.pickle"
 data = get_pickle_data(pickle_file)
 
-print("Data keys loaded...")
+logger.info("Data keys loaded...")
 for key, value in data.items():
-    print("\t{} => {} : {}".format(key, type(value), len(value)))
+    logger.info("\t{} => {} : {}".format(key, type(value), len(value)))
 
 packageid = 'a754F0000000A30QAE'
 channelid = 'a6H4F0000000DkMUAU'
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-print("Timestamp: {}".format(timestamp))
+logger.info("Timestamp: {}".format(timestamp))
 
 tax_profiles = data['tax_profiles']
 occupancy = data['occupancy']
@@ -47,6 +51,6 @@ kt_updates = process_packages(kaptioclient=kt, savepath=savepath, packages=kt_pa
 data['updates'] = kt_updates
 save_pickle_data(data, pickle_file)
 
-print(json.dumps(kt_updates.get('counts', {}), indent=4))
+logger.info(json.dumps(kt_updates.get('counts', {}), indent=4))
 file_path = os.path.join(savepath, "data", "kt_updates_{}.json".format(timestamp))
 save_json(file_path, kt_updates)

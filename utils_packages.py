@@ -6,6 +6,10 @@ import os
 import path
 from time import time
 from datetime import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def process_packages(kaptioclient, savepath, packages, tax_profiles, occupancy, channelid):
     package_count = 0
@@ -83,7 +87,7 @@ def process_packages(kaptioclient, savepath, packages, tax_profiles, occupancy, 
                                         log_item['data'] = new_info.get('data', [])
                                         new_prices.append(log_item)
                                         if fixed_count % 100 == 0:
-                                            print("{}/{} {} [{}] =>\n\tUpdating price in data {} {} {} {} {}".format(
+                                            logger.info("{}/{} {} [{}] =>\n\tUpdating price in data {} {} {} {} {}".format(
                                                         fixed_count, error_count, price_count, package_count,
                                                         packageid, d_key, t_key, o_key, p_item.get('service_level_id')))
                                         new_price_flag = True

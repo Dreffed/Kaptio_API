@@ -1,5 +1,9 @@
 import requests
 import json
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Load credentials from json file
 with open("kaptio_settings.json", "r") as f:  
@@ -79,11 +83,13 @@ for url in urls:
             continue
 
         thisurl = 'http://{}/{}/{}{}{}'.format(baseurl, url['version'], url['suburl'], paramstr, querystr)
-        print("{}:{}\n\t{}". format(url["name"], url['method'], thisurl))
+        logger.info("{}:{}\n\t{}". format(url["name"], url['method'], thisurl))
 
         if url['method'] == "GET":
             r = requests.get(thisurl, headers=headers)
         elif url['method'] == "POST":
             r = requests.post(thisurl, headers=headers)
         
-        print(r)
+        logger.info(r)
+
+

@@ -4,6 +4,10 @@ import os
 import path
 from time import time
 from datetime import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def load_config(config_file):
     config = {}
@@ -142,5 +146,5 @@ def get_configuration_path(config, name, paths):
     _setup = config.get('configurations',{}).get(name)
     _config_path = get_folderpath(config, _setup.get('folder'), paths)
     if config.get('flags', {}).get('switches', {}).get('logging'):
-        print('Configpath: {}'.format(_config_path))      
+        logger.info('Configpath: {}'.format(_config_path))      
     return os.path.join(_config_path, _setup.get('name'))

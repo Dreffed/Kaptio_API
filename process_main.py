@@ -8,30 +8,34 @@ import os
 import path
 from time import time
 from datetime import datetime
-  
+import logging
+import logging.config
+
+logger = logging.getLogger(__name__)
+
 PATHS = {
     'LOCAL': os.getcwd(),
     'HOME': os.path.expanduser("~") 
 }
 
 config = load_config('ktapi.json')
-
-log = config.get('flags', {}).get('switches', {}).get('logging')
+try:
+    logging.config.dictConfig(config.get('logger', {}))
+except:
+    logging.basicConfig(level=logging.INFO)
 
 homepath = PATHS.get('HOME', os.path.expanduser("~"))
 localpath = PATHS.get('LOCAL', os.getcwd())
 pid = os.getpid()
 
 savepath = get_folderpath(config, '_remote', PATHS)
-if log:
-    print('Savepath: {}'.format(savepath))
+logger.info('Savepath: {}'.format(savepath))
 
 kt_setup = config.get('configurations',{}).get('kaptio')
 kt_config_path = get_folderpath(config, kt_setup.get('folder'), PATHS)
 
 kaptio_config_file = get_configuration_path(config, 'kaptio', PATHS)
-if log:
-    print('KT Config: {}'.format(kaptio_config_file))
+logger.info('KT Config: {}'.format(kaptio_config_file))
 kaptio_config = load_kaptioconfig(kaptio_config_file)
 
 baseurl = kaptio_config['api']['baseurl']
@@ -43,8 +47,7 @@ data = get_pickle_data(pickle_file)
 
 packageid = 'a754F0000000A30QAE'
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-if log:
-    print("Timestamp: {}".format(timestamp))
+logger.info("Timestamp: {}".format(timestamp))
 
 function_swtich = {
     'partial': init_partial,
@@ -62,38 +65,34 @@ function_swtich = {
 }
 
 if config.get('flags', {}).get('switches', {}).get('full') or config.get('flags', {}).get('switches', {}).get('reload'):
-    if log:
-        print("reloading data...")
+    logger.info("reloading data...")
     data = {}
     save_pickle_data(data, pickle_file)
 
-if log:
-    if len(data)> 0:
-        print("Data keys loaded...")
-        for key, value in data.items():
-            if value:
-                print("\t{} => {} : {}".format(key, type(value), len(value)))
-            else:
-                print("\t{} : No Values".format(key))
-    else:
-        print('Clean data file...')
+if logger.level == logging.DEBUG and len(data)> 0:
+    logger.info("Data keys loaded...")
+    for key, value in data.items():
+        if value:
+            logger.info("\t{} => {} : {}".format(key, type(value), len(value)))
+        else:
+            logger.info("\t{} : No Values".format(key))
+else:
+    logger.info('Clean data file...')
 
 for process in config.get('process', []):
     #try:
     if function_swtich.get(process):
         data = function_swtich.get(process)(config, data, kt, savepath)
     #except Exception as ex:
-    #    print('=== ERROR: {} => {}'.format(process, ex))
+    #    logger.info('=== ERROR: {} => {}'.format(process, ex))
 
-if log:
-    print("Data keys loaded...")
-    for key, value in data.items():
-        if value:
-            print("\t{} => {} : {}".format(key, type(value), len(value)))
-        else:
-            print("\t{} : No Values".format(key))
+logger.info("Data keys loaded...")
+for key, value in data.items():
+    if value:
+        logger.info("\t{} => {} : {}".format(key, type(value), len(value)))
+    else:
+        logger.info("\t{} : No Values".format(key))
 
 save_pickle_data(data, pickle_file)
-if log:
-    save_json("kt_api_data.json", data)
+save_json("kt_api_data.json", data)
 

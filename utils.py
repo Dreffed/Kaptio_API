@@ -123,20 +123,36 @@ def extract_rows(node, fields):
     return row  
 
 def copy_pickles(savepath):
+    import socket
+    hostname = socket.gethostname()
+
+    data = {}
+
     for f in scanfiles('.', r'.*\.pickle'):
         fpart = f['file'].split('.')
         if len(fpart) != 2:
             continue
+        try:
+            fdate = datetime.strptime(f['modified'], '%Y-%m-%d %H:%M:%S')
+            newname = '{}.{}.{}.{}'.format(fpart[0], hostname, fdate.strftime('%Y%m%d%H%M'), fpart[-1])
+            if not os.path.exists(newname):
+                logger.info("Creating copy: {} => {}".format(f['file'], newname))
+                shutil.copy(f['file'], newname)
+            dstpath = os.path.join(savepath, 'config', newname)
 
-        fdate = datetime.strptime(f['modified'], '%Y-%m-%d %H:%M:%S')
-        newname = '{}.{}.{}.{}'.format(fpart[0], hostname, fdate.strftime('%Y%m%d%H%M'), fpart[-1])
-        if not os.path.exists(newname):
-            logger.info("Creating copy: {} => {}".format(f['file'], newname))
-            shutil.copy(f['file'], newname)
-        dstpath = os.path.join(savepath, 'config', newname)
-        if not os.path.exists(dstpath):
-            logger.info("Copy to share: {} => {}".format(f['file'], newname))
-            shutil.copy(f['file'], dstpath)
+            if not os.path.exists(dstpath):
+                logger.info("Copy to share: {} => {}".format(f['file'], newname))
+                shutil.copy(f['file'], dstpath)
+
+            data[f.get('file'), 'file'] = {
+                'src': f.get('file'),
+                'copy':newname,
+                'dest':dstpath
+            }
+        except Exception as ex:
+            logger.error("Failed to copy file {} {}".format(f.get('file'), ex))
+
+    return data
 
 def scan_packagefiles(savepath):
     data = {}

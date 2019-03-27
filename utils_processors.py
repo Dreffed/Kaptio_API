@@ -1,6 +1,6 @@
 # load the dependancies
 from kaptiorestpython.client import KaptioClient, load_kaptioconfig
-from utils import get_pickle_data, save_pickle_data, save_json, scanfiles
+from utils import get_pickle_data, save_pickle_data, save_json, scanfiles, copy_pickles
 import json
 import pickle
 import os
@@ -62,6 +62,25 @@ def load_metadata(config, data, kt, savepath):
             logger.info("\t{} => {} [{}]".format(key, len(value), type(value)))
         else:
             logger.info("\t{} : No Values".format(key))
+
+    return data
+
+def clear_data(config, data, kt, savepath):
+    if not data:
+        data = {}
+
+    if config.get('flags', {}).get('switches', {}).get('full') or config.get('flags', {}).get('switches', {}).get('reload'):
+        logger.info("reloading data...")
+        data = {}
+
+    return data
+
+def backup_data(config, data, kt, savepath):
+    if not data:
+        data = {}
+    if not data.get('backup'):
+        data['backup'] = {}
+    data['backup'] = {**data.get('backup',{}), **copy_pickles(savepath)}
 
     return data
 

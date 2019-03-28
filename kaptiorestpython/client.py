@@ -448,7 +448,7 @@ class KaptioClient:
                             data['errors'] = 0
                         data['errors'] += 1
                         data[d][t_key][o_key] = [{"errors" : [{"room_index": 0, "error": {"code": 500, "message": "Internal Server Error 500", "details": ""}}]}]
-        self.logger.info("\tCalls:{}".format(c_count))
+        self.logger.info("\t{} => {}".format(packageid, c_count))
         return data
 
     def worker_pool(self, package):

@@ -130,7 +130,7 @@ def promote_custom(config, data, kt, savepath):
             p_key = p_value.get('id')
             for c_key, c_value in p_value.get('custom_fields',{}).items():
                 if not c_key in p_value:
-                    data['packages'][p_key][c_key] = c_value
+                    p_value[c_key] = c_value
                     logger.info("\t{} => {}:{}".format(p_key, c_key, c_value))
         except Exception as ex:
             if config.get('flags', {}).get('switches', {}).get('errors'):

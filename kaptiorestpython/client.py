@@ -340,7 +340,7 @@ class KaptioClient:
         return rd
 
     def get_packageprice(self, savepath, packageid, date_from, date_to, taxprofileid = 'a8H4F0000003tsfUAA', channelid = 'a6H4F0000000DkMUAU', 
-                        occupancy = '1=1,0', services = 'a7r4F0000000AloQAE', debug=False):
+                        occupancy = '1=1,0', services = 'a7r4F0000000AloQAE'):
         data = []
         errors = []
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")

@@ -9,6 +9,7 @@ from utils_processors import (
         promote_custom, process_dates, process_prices, 
         process_packages, clear_data
     )
+from utils_parallel import process_price_parallel
 import json
 import pickle
 import os
@@ -70,6 +71,7 @@ def main():
         'custom': promote_custom,
         'dates': process_dates,
         'prices': process_prices,
+        'price_para': process_price_parallel,
         #'errors': process_errors,
         #'content': process_content,
         #'items': process_items,
@@ -91,14 +93,14 @@ def main():
     for process in config.get('process', []):
         logger.info("Running: {}".format(process))
         run_data['processes'].append(process)
-        try:
-            if function_switch.get(process):
-                data = function_switch.get(process)(config, data, kt, savepath)
-            else:
-                logging.warning("no process defined for {}".format(process))
-        except Exception as ex:
-            logger.error('=== ERROR: {} => {}'.format(process, ex))
-            break
+        #try:
+        if function_switch.get(process):
+            data = function_switch.get(process)(config, data, kt, savepath)
+        else:
+            logging.warning("no process defined for {}".format(process))
+        #except Exception as ex:
+        #    logger.error('=== ERROR: {} => {}'.format(process, ex))
+        #    break
 
     run_data['end'] = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 

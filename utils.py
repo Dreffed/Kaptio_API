@@ -7,18 +7,22 @@ import sys
 import time
 import re
 from datetime import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # helper functions
 def get_pickle_data(pickleName):
     data = {}
     if os.path.exists(pickleName):
-        print('Loading Saved Data... [%s]' % pickleName)
+        logger.info('Loading Saved Data... [%s]' % pickleName)
         with open(pickleName, 'rb') as handle:
             data = pickle.load(handle)
     return data
 
 def save_pickle_data(data, pickleName):
-    print('Saving Data... [%s]' % pickleName)
+    logger.info('Saving Data... [%s]' % pickleName)
     with open(pickleName, 'wb') as handle:
         pickle.dump(data, handle)
 
@@ -40,7 +44,7 @@ def get_fileinfo(filename):
         file_size = file_stats[stat.ST_SIZE]
         
     except Exception as e:
-        print("ERROR: fileinfo {}".format(e))
+        logger.info("ERROR: fileinfo {}".format(e))
         mod_time, acc_time, file_size = ["", "", 0]
         
     return mod_time, acc_time, file_size
@@ -49,7 +53,7 @@ def scanfiles(folder, filter = None):
     for dirpath, _, filenames in os.walk(folder):
         for filename in filenames:
             filepath = os.path.join(dirpath, filename)
-            #print(filename)
+            logger.debug(filename)
 
             m_data = None
             if filter is not None:
@@ -57,7 +61,7 @@ def scanfiles(folder, filter = None):
                     filter = re.compile(filter)
                 m = re.search(filter, filename)
                 if not m:
-                    #print("Skipping: {}".format(filename))
+                    logger.debug("Skipping: {}".format(filename))
                     continue
 
                 m_data = [m.groupdict() for m in filter.finditer(filename)]
@@ -77,62 +81,39 @@ def scanfiles(folder, filter = None):
 
                 yield data
             except Exception as e:
-                print("ERROR: scan files failed {}".format(e))
-
-def extract_rows(node, fields):
-    """ 
-        node - a dictionary of data
-        fields an array of dicts
-            {
-                "source":<>,
-                "_output":<>
-                "translate": {<term>:<translate>, ...}
-            }
-    """
-    row = {}
-    if not isinstance(node, dict):
-        return row
-    #print("====\n{}".format(fields))
-    for key, value in node.items():
-        celldata = value
-        if key in fields:
-            if '_output' in fields[key]:
-                outname = fields[key]['_output']
-            else:
-                outname = key
-
-            if '_fields' in  fields[key]:
-                if '_type' in fields[key]:
-                    if fields[key]["_type"] == 'list':
-                        # this is a list object.
-                        celldata = []
-                        for item in value:
-                            celldata.append(extract_rows(item, fields[key]['_fields']))
-                    elif fields[key]["_type"] == 'records':
-                        celldata = []
-                        for item in value[fields[key]["_type"]]:
-                            celldata.append(extract_rows(item, fields[key]['_fields']))
-                    elif fields[key]["_type"] == 'dict':
-                        celldata = extract_rows(value, fields[key]['_fields'])
-            row[outname] = celldata
-
-    return row  
+                logger.info("ERROR: scan files failed {}".format(e))
 
 def copy_pickles(savepath):
+    import socket
+    hostname = socket.gethostname()
+
+    data = {}
+
     for f in scanfiles('.', r'.*\.pickle'):
         fpart = f['file'].split('.')
         if len(fpart) != 2:
             continue
+        try:
+            fdate = datetime.strptime(f['modified'], '%Y-%m-%d %H:%M:%S')
+            newname = '{}.{}.{}.{}'.format(fpart[0], hostname, fdate.strftime('%Y%m%d%H%M'), fpart[-1])
+            if not os.path.exists(newname):
+                logger.info("Creating copy: {} => {}".format(f['file'], newname))
+                shutil.copy(f['file'], newname)
+            dstpath = os.path.join(savepath, 'config', newname)
 
-        fdate = datetime.strptime(f['modified'], '%Y-%m-%d %H:%M:%S')
-        newname = '{}.{}.{}.{}'.format(fpart[0], hostname, fdate.strftime('%Y%m%d%H%M'), fpart[-1])
-        if not os.path.exists(newname):
-            print("Creating copy: {} => {}".format(f['file'], newname))
-            shutil.copy(f['file'], newname)
-        dstpath = os.path.join(savepath, 'config', newname)
-        if not os.path.exists(dstpath):
-            print("Copy to share: {} => {}".format(f['file'], newname))
-            shutil.copy(f['file'], dstpath)
+            if not os.path.exists(dstpath):
+                logger.info("Copy to share: {} => {}".format(f['file'], newname))
+                shutil.copy(f['file'], dstpath)
+
+            data[f.get('file'), 'file'] = {
+                'src': f.get('file'),
+                'copy':newname,
+                'dest':dstpath
+            }
+        except Exception as ex:
+            logger.error("Failed to copy file {} {}".format(f.get('file'), ex))
+
+    return data
 
 def scan_packagefiles(savepath):
     data = {}
@@ -148,7 +129,7 @@ def scan_packagefiles(savepath):
                 data[packageid]['file'] = f.copy()
 
             except Exception as ex:
-                print("skipping file {}\n{}".format(f, ex))
+                logger.info("skipping file {}\n{}".format(f, ex))
     return data
 
 if __name__ == "__main__":
@@ -162,12 +143,12 @@ if __name__ == "__main__":
     copypickle = True
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    print("Timestamp: {}".format(timestamp))
+    logger.info("Timestamp: {}".format(timestamp))
     if copypickle:
         copy_pickles(savepath)
     else:
         kt_processed = scan_packagefiles(savepath)
-        print(len(kt_processed))
+        logger.info(len(kt_processed))
         filepath = os.path.join(savepath, "data", "kt_preocessed__{}.json".format(timestamp))
         save_json(filepath, kt_processed)
 

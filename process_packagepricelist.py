@@ -1,5 +1,6 @@
 # load the dependancies
-from kaptiorestpython.client import KaptioClient, load_kaptioconfig
+from kaptiorestpython.client import KaptioClient
+from kaptiorestpython.utils_kaptio import load_kaptioconfig
 from utils import get_pickle_data, save_pickle_data, save_json, scanfiles
 import json
 import pickle
@@ -7,6 +8,10 @@ import os
 import path
 from time import time
 from datetime import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def build_query(packageid, date_from, date_to, taxprofileid = 'a8H4F0000003tsfUAA', channelid = 'a6H4F0000000DkMUAU', 
                         occupancy = '1=1,0', services = 'a7r4F0000000AloQAE'):
@@ -52,7 +57,7 @@ data = get_pickle_data(pickle_file)
 
 packageid = 'a754F0000000A30QAE'
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-print("Timestamp: {}".format(timestamp))
+logger.info("Timestamp: {}".format(timestamp))
 
 tax_profiles = data['tax_profiles']
 occupancy = data['occupancy']
@@ -72,7 +77,7 @@ fn_pricelist = []
 fn_reprocess = []
 filecount = 0
 errorcount = 0
-print("scanning... {}".format(datapath))
+logger.info("scanning... {}".format(datapath))
 for f in scanfiles(datapath, r'price_([a-zA-Z0-9]+)_([\d]+)\.json'):
     filepath = os.path.join(f['folder'], f['file'])
     try:
@@ -89,15 +94,15 @@ for f in scanfiles(datapath, r'price_([a-zA-Z0-9]+)_([\d]+)\.json'):
                 pl_data = json.loads("[{}]".format(fp.read().replace("}{", "},{")))
                 fn_pricelist.append(pl_data)
             except Exception as ex:
-                print("Reprocess {}".format(ex))
+                logger.info("Reprocess {}".format(ex))
                 fn_reprocess.append(filepath)
                 break
                 
     except Exception as ex:
-        print("ERROR: {}\n\t{}".format(json.dumps(f, indent=4), ex))
+        logger.info("ERROR: {}\n\t{}".format(json.dumps(f, indent=4), ex))
         errorcount += 1
 
-print("Loaded {} JSON {} RAW {}\n\t=={} errors".format(filecount, len(fn_pricelist), len(fn_reprocess), errorcount))
+logger.info("Loaded {} JSON {} RAW {}\n\t=={} errors".format(filecount, len(fn_pricelist), len(fn_reprocess), errorcount))
 
 # now reprocess the raw_file:
 errorcount = 0
@@ -106,31 +111,31 @@ fn_errors = []
 
 # reprocess if we want
 if True:
-    print("Missed {} files".format(len(fn_reprocess)))
+    logger.info("Missed {} files".format(len(fn_reprocess)))
 else:        
-    print("Reloaded {} JSON {}\n\t=={} / {} errors".format(filecount, len(fn_pricelist), errorcount, len(fn_errors)))
+    logger.info("Reloaded {} JSON {}\n\t=={} / {} errors".format(filecount, len(fn_pricelist), errorcount, len(fn_errors)))
 fn_reprocess = None
 
 # load the data into memory, index by query...
 kt_prices = {}
 for p_data in fn_pricelist:
     if isinstance(p_data, list):
-        #print("Array: {}".format(len(p_data)))
-        #print(json.dumps(p_data, indent=4))
+        logger.debug("Array: {}".format(len(p_data)))
+        logger.debug(json.dumps(p_data, indent=4))
         for item in p_data:
             if not item['query'] in kt_prices:
                 kt_prices[item['query']] = item
             else:
-                print("Already indexed...")
+                logger.info("Already indexed...")
     elif isinstance(p_data, dict):
         kt_prices[p_data['query']] = p_data
     else:
-        print("incorrect data! {}".format(p_data))
+        logger.info("incorrect data! {}".format(p_data))
 
 fn_pricelist = None
 
-print("Extracted: {} calls".format(len(kt_prices)))
-print(json.dumps(search_values, indent = 4))
+logger.info("Extracted: {} calls".format(len(kt_prices)))
+logger.info(json.dumps(search_values, indent = 4))
 
 channel_id = search_values['channel_id']
 currency =  search_values['currency']
@@ -188,7 +193,7 @@ for p in kt_packages:
         p['pricelist'] = p_data
         kt_pricelist[packageid]['pricelist'] = p_data
 
-print("Replaced: {} Errors {}".format(replaced, len(error_list)))
+logger.info("Replaced: {} Errors {}".format(replaced, len(error_list)))
 
 file_path = os.path.join(savepath, "data", "kt_pricelist_{}.json".format(timestamp))
 save_json(file_path, kt_pricelist)

@@ -6,6 +6,10 @@ import shutil
 import path
 from time import time
 from datetime import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 homepath = os.path.expanduser("~")
 datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
@@ -15,7 +19,7 @@ localpath = os.path.join(homepath, *localpaths)
 
 if not os.path.exists(localpath):
     # creeate the folder...
-    print("Creating archive directory: {}".format(localpath))
+    logger.info("Creating archive directory: {}".format(localpath))
     os.makedirs(localpath)
 
 datapath = os.path.join(savepath, "data")
@@ -31,7 +35,7 @@ for f in scanfiles(datapath, r".*\.json"):
     # copy the file over...
     shutil.move(filepath, destfile)
     if filecount % 1000 == 0:
-        print("...",)
+        logger.info("...",)
 
-print("Found {} files.".format(filecount))
+logger.info("Found {} files.".format(filecount))
 

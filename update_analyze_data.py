@@ -8,7 +8,12 @@ from time import time
 from datetime import datetime
 import socket
 import csv
+import logging
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+update = False
 hostname = socket.gethostname()
 homepath = os.path.expanduser("~")
 datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
@@ -20,11 +25,14 @@ data = get_pickle_data(pickle_file)
 datestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 # get the processed files data:
-kt_processed = scan_packagefiles(savepath)
-print("Found {} fresh price packages".format(len(kt_processed)))
+if update:
+    kt_processed = scan_packagefiles(savepath)
+    logger.info("Found {} fresh price packages".format(len(kt_processed)))
+else:
+    kt_processed = {}
 
 kt_packages = data.get('packages', {})
-print("Found {} cached packages".format(len(kt_packages)))
+logger.info("Found {} cached packages".format(len(kt_packages)))
 
 kt_skipped = []
 
@@ -45,23 +53,11 @@ for p in kt_packages:
             change_count +=1
             p = p_data
 
-print("Packages: {}\n\tskipped: {}\n\tChanged: {}".format(package_count, len(kt_skipped), change_count))
+logger.info("Packages: {}\n\tskipped: {}\n\tChanged: {}".format(package_count, len(kt_skipped), change_count))
 if change_count > 0:
     data['packages'] = kt_packages
     save_pickle_data(data, pickle_file)
-"""
-change_count = 0
-for packageid in kt_skipped:
-    p_data = kt_processed.get(packageid, {})
-    kt_packages.append(p_data)
-    change_count += 1
 
-print("Packages: {}\n\tChanged: {}".format(len(kt_packages), change_count))
-
-if change_count > 0:
-    data['packages'] = kt_packages
-    save_pickle_data(data, pickle_file)
-"""
 kt_error = []
 kt_1040 = []
 kt_1020 = []
@@ -73,7 +69,7 @@ error_count = 0
 tax_profiles = data.get('tax_profiles', {})
 
 #for p_value in kt_packages:
-for p_key, p_value in kt_processed.items():
+for p_value in kt_packages:
     packageid = p_value.get('id')
     datestamp = p_value.get('updated')
     hostname = p_value.get('hostname')
@@ -122,9 +118,9 @@ for p_key, p_value in kt_processed.items():
                         else:
                             kt_error.append(log_item)
 
-print("Packages: {}".format(len(data.get('packages', []))))
-print("Processed: {}\n\tPrices:{}\n\tErrors:{}".format(package_count, price_count, error_count))
-print("\tMisc:{}\n\t1020:{}\n\t1040:{}".format(len(kt_error), len(kt_1020), len(kt_1040)))
+logger.info("Packages: {}".format(len(data.get('packages', []))))
+logger.info("Processed: {}\n\tPrices:{}\n\tErrors:{}".format(package_count, price_count, error_count))
+logger.info("\tMisc:{}\n\t1020:{}\n\t1040:{}".format(len(kt_error), len(kt_1020), len(kt_1040)))
 fieldnames = ['packageid', 'date', 'tax_profile_id', 'tax_profile', 'occupancy', 'service_level_id', 'service_level', 'code', 'message']
 
 if len(kt_1020) > 0:

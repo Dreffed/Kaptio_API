@@ -8,6 +8,10 @@ import path
 from time import time
 from datetime import datetime
 import re
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 homepath = os.path.expanduser("~")
 datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
@@ -19,7 +23,7 @@ kaptio_config = load_kaptioconfig(kaptio_config_file)
 debug = True
 baseurl = kaptio_config['api']['baseurl']
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-print("Timestamp: {}".format(timestamp))
+logger.info("Timestamp: {}".format(timestamp))
 
 kt = KaptioClient(baseurl, kaptio_config['api']['auth']['key'], kaptio_config['api']['auth']['secret'])
 
@@ -80,7 +84,7 @@ for key, value in kt_newprice.items():
                                                         pl['total_price'] = p_item['total_price'].copy()
                                                         kt_replaced.append(n_data)
 
-print("Processed {} : replaced {}".format(item_checked, len(kt_replaced)))
+logger.info("Processed {} : replaced {}".format(item_checked, len(kt_replaced)))
 data['pricelist'] = kt_pricelist
 save_pickle_data(data, pickle_file)
 

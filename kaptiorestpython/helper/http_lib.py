@@ -1,26 +1,31 @@
 import requests
 import time
 import mimetypes
+import logging
+
+def _rate_limited(maxPerSecond):
+    minInterval = 1.0 / float(maxPerSecond)
+    def decorate(func):
+        lastTimeCalled = [0.0]
+        def rateLimitedFunction(*args,**kargs):
+            elapsed = time.clock() - lastTimeCalled[0]
+            leftToWait = minInterval - elapsed
+            if leftToWait>0:
+                time.sleep(leftToWait)
+            ret = func(*args,**kargs)
+            lastTimeCalled[0] = time.clock()
+            return ret
+        return rateLimitedFunction
+    return decorate
 
 class HttpLib:
     max_retries = 3
     sleep_duration = 3
     num_calls_per_second = 5  # can run five times per second at most (at 100/20 rate limit)
 
-    def _rate_limited(maxPerSecond):
-        minInterval = 1.0 / float(maxPerSecond)
-        def decorate(func):
-            lastTimeCalled = [0.0]
-            def rateLimitedFunction(*args,**kargs):
-                elapsed = time.clock() - lastTimeCalled[0]
-                leftToWait = minInterval - elapsed
-                if leftToWait>0:
-                    time.sleep(leftToWait)
-                ret = func(*args,**kargs)
-                lastTimeCalled[0] = time.clock()
-                return ret
-            return rateLimitedFunction
-        return decorate
+    def __init__(self):
+        logging.basicConfig(level=logging.INFO)
+        self.logger = logging.getLogger(__name__)
 
     @_rate_limited(num_calls_per_second)
     def get(self, endpoint, args=None, mode=None):
@@ -38,7 +43,7 @@ class HttpLib:
                     # if we still hit the rate limiter, do not return anything so the call will be retried
                     if 'success' in r_json:  # this is for all normal API calls (but not the access token call)
                         if r_json['success'] == False:
-                            print('error from http_lib.py: ' + str(r_json['errors'][0]))
+                            self.logger.info('error from http_lib.py: ' + str(r_json['errors'][0]))
                             if r_json['errors'][0]['code'] in ('606', '615', '604'):
                                 # this handles Marketo exceptions; HTTP response is still 200, but error is in the JSON
                                 error_code = r_json['errors'][0]['code']
@@ -47,9 +52,9 @@ class HttpLib:
                                     '615': 'concurrent call limit',
                                     '604': 'timeout'}
                                 if retries < self.max_retries:
-                                    print('Attempt %s. Error %s, %s. Pausing, then trying again.' % (retries, error_code, error_description[error_code]))
+                                    self.logger.info('Attempt %s. Error %s, %s. Pausing, then trying again.' % (retries, error_code, error_description[error_code]))
                                 else:
-                                    print('Attempt %s. Error %s, %s. This was the final attempt.' % (retries, error_code, error_description[error_code]))
+                                    self.logger.warning('Attempt %s. Error %s, %s. This was the final attempt.' % (retries, error_code, error_description[error_code]))
                                 time.sleep(self.sleep_duration)
                                 retries += 1
                             else:
@@ -60,7 +65,7 @@ class HttpLib:
                     else:
                         return r_json  # this is only for the access token call
             except Exception as e:
-                print("HTTP Get Exception! Retrying.....")
+                self.logger.error("HTTP Get Exception! Retrying.....")
                 time.sleep(self.sleep_duration)
                 retries += 1
 
@@ -84,7 +89,7 @@ class HttpLib:
                 # if we still hit the rate limiter, do not return anything so the call will be retried
                 if 'success' in r_json:  # this is for all normal API calls (but not the access token call)
                     if r_json['success'] == False:
-                        print('error from http_lib.py: ' + str(r_json['errors'][0]))
+                        self.logger.info('error from http_lib.py: ' + str(r_json['errors'][0]))
                         if r_json['errors'][0]['code'] in ('606', '615', '604'):
                             # this handles Marketo exceptions; HTTP response is still 200, but error is in the JSON
                             error_code = r_json['errors'][0]['code']
@@ -93,10 +98,10 @@ class HttpLib:
                                 '615': 'concurrent call limit',
                                 '604': 'timeout'}
                             if retries < self.max_retries:
-                                print('Attempt %s. Error %s, %s. Pausing, then trying again.' % (
+                                self.logger.info('Attempt %s. Error %s, %s. Pausing, then trying again.' % (
                                 retries, error_code, error_description[error_code]))
                             else:
-                                print('Attempt %s. Error %s, %s. This was the final attempt.' % (
+                                self.logger.info('Attempt %s. Error %s, %s. This was the final attempt.' % (
                                 retries, error_code, error_description[error_code]))
                             time.sleep(self.sleep_duration)
                             retries += 1
@@ -108,7 +113,7 @@ class HttpLib:
                 else:
                     return r_json
             except Exception as e:
-                print("HTTP Post Exception! Retrying....."+ str(e))
+                self.logger.info("HTTP Post Exception! Retrying....."+ str(e))
                 time.sleep(self.sleep_duration)
                 retries += 1
 
@@ -123,6 +128,6 @@ class HttpLib:
                 r = requests.delete(endpoint, params=args, json=data, headers=headers)
                 return r.json()
             except Exception as e:
-                print("HTTP Delete Exception! Retrying....."+ str(e))
+                self.logger.info("HTTP Delete Exception! Retrying....."+ str(e))
                 time.sleep(self.sleep_duration)
                 retries += 1

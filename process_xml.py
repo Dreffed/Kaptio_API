@@ -1,6 +1,8 @@
 # load the dependancies
-from kaptiorestpython.client import KaptioClient, load_kaptioconfig
-from utils import get_pickle_data, save_pickle_data, save_json, scanfiles, load_json, extract_rows
+from kaptiorestpython.client import KaptioClient
+from kaptiorestpython.utils_kaptio import load_kaptioconfig
+from utils import get_pickle_data, save_pickle_data, save_json, scanfiles, load_json
+from utils_dict import extract_rows
 from xml_utilities import get_farebase
 from content_utils import get_web, get_svc, get_hgh
 from os import path
@@ -11,6 +13,10 @@ from ElementTree_pretty import prettify
 import json
 import pickle
 import codecs
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 homepath = path.expanduser("~")
 datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
@@ -30,7 +36,7 @@ pickle_file = "kaptio_allsell.pickle"
 data = get_pickle_data(pickle_file)
 
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-print("Timestamp: {}".format(timestamp))
+logger.info("Timestamp: {}".format(timestamp))
 
 packageid = 'a754F0000000A30QAE'
 tax_profiles = data['tax_profiles']
@@ -42,7 +48,7 @@ kt_packages = data['packages']
 kt_pricelist = data['pricelist']
 kt_content = data['content']
 
-print("Generating XML:\n\t{} packages\n\t{} prices\n\t{} contents".format(
+logger.info("Generating XML:\n\t{} packages\n\t{} prices\n\t{} contents".format(
                     len(kt_packages), 
                     len(kt_pricelist), 
                     len(kt_content)))
@@ -74,8 +80,8 @@ for key, value in kt_content.items():
             row = extract_rows(item, fields) 
             kt_pcontent[key].append(row)
 
-print("Content {}".format(len(kt_content)))
-print("Pivot {}".format(len(kt_pcontent)))
+logger.info("Content {}".format(len(kt_content)))
+logger.info("Pivot {}".format(len(kt_pcontent)))
 
 file_path = path.join(savepath, "data", "kt_contents_{}.json".format(timestamp))
 save_json(file_path, kt_content)
@@ -83,7 +89,7 @@ save_json(file_path, kt_content)
 file_path = path.join(savepath, "data", "kt_pcontent_{}.json".format(timestamp))
 save_json(file_path, kt_pcontent)
 
-departure_tyes = [
+departure_types = [
     'Anyday', 'Seasonal', 'Fixed'
 ]
 
@@ -113,7 +119,7 @@ for p in kt_packages:
 
     # get the core fields...
     packageid = p['id']
-    #print('=== {} ==='.format(packageid))
+    logger.debug('=== {} ==='.format(packageid))
 
     if 'custom_fields' in p:
         if 'product_code' in p['custom_fields']:
@@ -128,9 +134,9 @@ for p in kt_packages:
 
     try: # default to 2: fixed
         packagetypeid = int(p['departure_type_id'])
-        p_fields['packageType'] = departure_tyes[packagetypeid]
+        p_fields['packageType'] = departure_types[packagetypeid]
     except:
-        p_fields['packageType'] = departure_tyes[2]
+        p_fields['packageType'] = departure_types[2]
 
     p_fields['duration'] = str(p['length'])
     
@@ -156,7 +162,7 @@ for p in kt_packages:
     p_fields['promotion'] = str(False)
     
     for key, value in p_fields.items():
-        #print("\t{} => {}".format(key, value))
+        logger.debug("\t{} => {}".format(key, value))
         se = SubElement(xml_product, key)
         if len(value) > 0:
             se.text = str(value)
@@ -241,7 +247,7 @@ for p in kt_packages:
                         xml_basis.append(xml_svc)
 
 
-print("{} exported".format(package_count))
+logger.info("{} exported".format(package_count))
 
 xml_file = path.join(savepath, 'data', 'webdata-zerorated-formated.xml') 
 with codecs.open(xml_file, 'w', encoding='utf8') as fp:

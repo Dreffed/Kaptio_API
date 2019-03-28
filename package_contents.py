@@ -7,11 +7,15 @@ import os
 import path
 from time import time
 from datetime import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 homepath = os.path.expanduser("~")
 datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
 savepath = os.path.join(homepath, *datapaths)
-print(savepath)
+logger.info(savepath)
 
 kaptio_config_file = os.path.join(savepath, "config", "kaptio_settings.json")
 kaptio_config = load_kaptioconfig(kaptio_config_file)
@@ -31,13 +35,13 @@ kt = KaptioOGraph(baseurl, sfurl, username, password, security_token, sandbox, c
 pickle_file = "kaptio_allsell.pickle"
 data = get_pickle_data(pickle_file)
 
-print("Available items:")
+logger.info("Available items:")
 for key, value in data.items():
-    print("\t{}".format(key))
+    logger.info("\t{}".format(key))
 
 packageid = 'a754F0000000A30QAE'
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-print("Timestamp: {}".format(timestamp))
+logger.info("Timestamp: {}".format(timestamp))
 
 kt_packages = data['packages']
 for key, value in data.items():
@@ -57,6 +61,6 @@ if not 'content' in data:
 else:
     kt_content = data['content']
 
-print("Found content for {}".format(len(kt_content)))
+logger.info("Found content for {}".format(len(kt_content)))
 
 # extract out the fields from the content...

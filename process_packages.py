@@ -7,6 +7,10 @@ import os
 import path
 from time import time
 from datetime import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 refresh = True
 
@@ -27,7 +31,7 @@ data = get_pickle_data(pickle_file)
 
 packageid = 'a754F0000000A30QAE'
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-print("Timestamp: {}".format(timestamp))
+logger.info("Timestamp: {}".format(timestamp))
 
 if 'tax_profiles' in data:
     tax_profiles = data['tax_profiles']
@@ -92,12 +96,12 @@ if 'packages' in data and not refresh:
     kt_packages = data['packages']
 else:
     kt_packages = kt.get_packages(savepath)
-    print("\tFetched packages [{}]".format(len(kt_packages)))
+    logger.info("\tFetched packages [{}]".format(len(kt_packages)))
     data['packages'] = kt_packages
 
 for p in kt_packages:
     if not 'dates' in p:
-        print("Fetching dates...{} => {}".format(p['id'], p['name']))
+        logger.info("Fetching dates...{} => {}".format(p['id'], p['name']))
         p['dates'] = kt.get_packagedepartures(savepath, p['id'], season_start, season_end)    
     
     # deal wit hteh custom fields
@@ -107,7 +111,7 @@ for p in kt_packages:
 
 data['packages'] = kt_packages
 save_pickle_data(data, pickle_file)
-print('Saved {} packages'.format(len(kt_packages)))
+logger.info('Saved {} packages'.format(len(kt_packages)))
 
 file_path = os.path.join(savepath, "data", "kt_packages_aug_{}.json".format(timestamp))
 save_json(file_path, kt_packages)

@@ -8,6 +8,7 @@ from kaptiorestpython.helper.exceptions import APIException
 from utils import save_json
 from simple_salesforce import Salesforce
 import requests
+import logging
 
 class KaptioOGraph:
     # franken code for client calls...
@@ -32,6 +33,9 @@ class KaptioOGraph:
         assert(clientid is not None)
         assert(clientsecret is not None)
 
+
+        logging.basicConfig(level=logging.INFO)
+        self.logger = logging.getLogger(__name__)
         self.baseurl = baseurl
         self.sfurl = sfurl
         self.username = username
@@ -56,8 +60,8 @@ class KaptioOGraph:
         r = requests.post("{}/services/oauth2/token".format(self.sfurl), params=params)
         self.access_token = r.json().get("access_token")
         self.instance_url = r.json().get("instance_url")
-        print("Access Token:", self.access_token)
-        print("Instance URL", self.instance_url)      
+        self.logger.info("Access Token:", self.access_token)
+        self.logger.info("Instance URL", self.instance_url)      
 
     def get_content(self, packageid):
         if self.access_token is None:
@@ -77,7 +81,7 @@ class KaptioOGraph:
             json_data = json.loads(r.text)
         else:
             json_data['Error'] = r
-            print("Failed: {} => {}".format(r, r.text)) 
+            self.logger.info("Failed: {} => {}".format(r, r.text)) 
         return json_data
 
 

@@ -5,6 +5,10 @@ import os
 import path
 from time import time
 from datetime import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 update_lookups = False
 
@@ -14,16 +18,16 @@ savepath = os.path.join(homepath, *datapaths)
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
 pickle_files = scanfiles('.', r".*\.pickle")
-print("Pickles:")
+logger.info("Pickles:")
 for f in pickle_files:
-    print("\t{} => {} [{}]".format(f['file'], f['folder'], json.dumps(f, indent=2)))
+    logger.info("\t{} => {} [{}]".format(f['file'], f['folder'], json.dumps(f, indent=2)))
 
 pickle_file = "kaptio_allsell.pickle"
 
 data = get_pickle_data(pickle_file)
 
 for key, value in data.items():
-    print(key)
+    logger.info(key)
 
 if update_lookups:
     tax_profiles = {
@@ -52,13 +56,30 @@ kt_packages = []
 if 'packages' in data:
     kt_packages = data['packages']
 
-print("Loaded {} packages".format(len(kt_packages)))
+logger.info("Loaded {} packages".format(len(kt_packages)))
 
+
+logger.info("Error report ")
+error_logs = []
 for p in kt_packages:
+    p_row = {}
+    p_row['packageid'] = p.get('id')
+    p_row['packagename'] = p.get('external_name')
+    p_row['packagerecordtype'] = p.get('record_type_name')
+    p_row['packagelength'] = p.get('length')
+    p_row['packagedatecount'] = len(p.get('dates', {}))
+
+    for d_key, d_value in p.get('pricelist').items():
+        if d_key == 'errors':
+            continue
+        for t_key, t_value in d_value.items():
+            for o_key, o_value in t_value.items():
+                pass
+                
     if 'pricelist' in p:
         if 'errors' in p['pricelist']:
-            print("{} has pricelist".format(p['id']))
-            print("\tERROR Found: {}".format(p['pricelist']['errors']))
+            logger.info("{} has pricelist".format(p['id']))
+            logger.info("\tERROR Found: {}".format(p['pricelist']['errors']))
 
 if 'content' in data:
     kt_content = data['content']
@@ -70,7 +91,7 @@ for key, value in kt_content.items():
             row = extract_rows(item, fields) 
             rows.append(row)
 
-print(len(rows))
+logger.info(len(rows))
 
 file_path = os.path.join(savepath, "data", "kt_contents_{}.json".format(timestamp))
 save_json(file_path, kt_content)

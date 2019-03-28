@@ -124,7 +124,10 @@ def main():
             logger.info("\t{} : No Values".format(key))
 
     save_pickle_data(data, pickle_file)
-    save_json("kt_api_data.json", data)
+    try:
+        save_json("kt_api_data.json", data)
+    except Exception as ex:
+        logger.info("Failed to save JSON file.")
 
 if __name__ == '__main__':
     main()

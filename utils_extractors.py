@@ -31,7 +31,7 @@ def get_packagerows(packages):
     logger.info("Found {} packages".format(len(rows)))
     return rows
 
-def get_pricedata(data, rows):
+def get_pricedata(data, rows, tax_profile):
     error_list = []
     price_data = []
     for row in rows:
@@ -76,7 +76,7 @@ def get_pricedata(data, rows):
                     b['sun'] = ('Y' if dow =='Sun' else '')
 
                     for t_key, t_value in d_value.items():
-                        if t_key != 'Zero Rated':
+                        if t_key != tax_profile:
                             continue
                         o_data  = {}
                         for o_key, o_value in t_value.items():

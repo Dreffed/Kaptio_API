@@ -43,22 +43,25 @@ def process_bulkloader(config, data, kt, savepath):
     if not data:
         data = {}
 
-    rows = get_packagerows(data.get('packages', []))
-    
-    extract_data = get_pricedata(data, rows)
-    data['errors'] = extract_data.get('errors')
-    data['price_data'] = extract_data.get('price_data')
-
     config_path = os.path.join(savepath, 'config', 'all_sell.xl.config.json')
-    xl_config = load_bulkloaderconfig(config_path)
+    rows = get_packagerows(data.get('packages', []))
 
-    generate_bulkloader(
-            price_data=extract_data.get('price_data', []), 
-            savepath=savepath, 
-            template='Rocky Bulk Cost Loader template.xlsx', 
-            yearnumber=2020, 
-            versionnumber='1.2', 
-            config=xl_config)
+    for t_key in data.get('tax_profiles', {}).keys():
+        extract_data = get_pricedata(data, rows, t_key)
+        data['errors'] = extract_data.get('errors')
+        data['price_data'] = extract_data.get('price_data')
+
+        xl_config = load_bulkloaderconfig(config_path)
+
+        generate_bulkloader(
+                price_data=extract_data.get('price_data', []), 
+                savepath=savepath, 
+                template='Rocky Bulk Cost Loader template.xlsx', 
+                yearnumber=2020, 
+                versionnumber='1.2',
+                tax_profile=t_key,
+                config=xl_config
+            )
 
     return data
 
@@ -86,7 +89,6 @@ def process_xml(config, data, kt, savepath):
             for item in value:
                 row = extract_rows(item, content_fields) 
                 kt_pcontent[key].append(row)
-
 
     logger.info("Content {}".format(len(data.get('content', {}))))
     logger.info("Pivot {}".format(len(kt_pcontent)))    

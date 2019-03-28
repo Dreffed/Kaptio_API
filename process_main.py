@@ -7,9 +7,14 @@ from utils_config import get_folderpath, load_config, get_configuration_path
 from utils_processors import (
         backup_data, load_metadata, init_partial, 
         promote_custom, process_dates, process_prices, 
-        process_packages, clear_data
+        process_packages, clear_data, process_content,
+        process_items
     )
 from utils_parallel import process_price_parallel
+from utils_output import (
+        process_allsell, process_bulkloader, 
+        process_errors, process_xml
+    )
 import json
 import pickle
 import os
@@ -72,12 +77,12 @@ def main():
         'dates': process_dates,
         'prices': process_prices,
         'price_para': process_price_parallel,
-        #'errors': process_errors,
-        #'content': process_content,
-        #'items': process_items,
-        #'allsell': process_allsell,
-        #'bulkloader': process_bulkloader,
-        #'xml': process_xml
+        'errors': process_errors,
+        'content': process_content,
+        'items': process_items,
+        'allsell': process_allsell,
+        'bulkloader': process_bulkloader,
+        'xml': process_xml
     }
 
     if logger.level == logging.DEBUG and len(data)> 0:

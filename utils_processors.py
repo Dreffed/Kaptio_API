@@ -214,12 +214,6 @@ def process_prices(config, data, kt, savepath):
 
     return data
 
-def process_errors(config, data, kt, savepath):
-    if not data:
-        data = {}
-
-    return data
-
 def process_content(config, data, kt, savepath):
     if not data:
         data = {}
@@ -227,24 +221,6 @@ def process_content(config, data, kt, savepath):
     return data
 
 def process_items(config, data, kt, savepath):
-    if not data:
-        data = {}
-
-    return data
-
-def process_allsell(config, data, kt, savepath):
-    if not data:
-        data = {}
-
-    return data
-
-def process_bulkloader(config, data, kt, savepath):
-    if not data:
-        data = {}
-
-    return data
-
-def process_xml(config, data, kt, savepath):
     if not data:
         data = {}
 

@@ -432,7 +432,7 @@ class KaptioClient:
                 for o_key, o_value in occupancy.items():
                     pricelist = self.get_packageprice(savepath, packageid, date_from=d, date_to=d, 
                                                 taxprofileid=t_value, occupancy=o_value,
-                                                services=services_str, debug=debug)
+                                                services=services_str)
                     data[d][t_key][o_key] = []
                     try:
                         if len(pricelist['data']) > 0:
@@ -469,7 +469,7 @@ class KaptioClient:
             package['pricelist'] = self.walk_package(self.savepath, package['id'], 
                             dates=package['dates'], tax_profiles=package['tax_profiles'], 
                             occupancy=package['occupancy'], 
-                            services=package['service_levels'], debug=True)
+                            services=package['service_levels'])
             save_json(file_path, package)
         w_results[packageid] = package
         return w_results
@@ -517,11 +517,11 @@ class KaptioClient:
                 p['product_code'] = p.get('custom_fields',{}).get('product_code')
 
                 if not 'pricelist' in p:
-                    p['pricelist'] = self.walk_package(savepath, packageid, dates=p['dates'], tax_profiles=tax_profiles, occupancy=occupancy, services=p['service_levels'], debug=True)
+                    p['pricelist'] = self.walk_package(savepath, packageid, dates=p['dates'], tax_profiles=tax_profiles, occupancy=occupancy, services=p['service_levels'])
                 else:
                     if 'errors' in p['pricelist']:
                         self.logger.info("Fixing errors: {} => {}".format(p['id'], p['name']))
-                        p['pricelist'] = self.walk_package(savepath, p['id'], dates=p['dates'], tax_profiles=tax_profiles, occupancy=occupancy, services=p['service_levels'], debug=True)
+                        p['pricelist'] = self.walk_package(savepath, p['id'], dates=p['dates'], tax_profiles=tax_profiles, occupancy=occupancy, services=p['service_levels'])
                     else:
                         self.logger.info("Skipping: {} => {}".format(p['id'], p['name']))
 

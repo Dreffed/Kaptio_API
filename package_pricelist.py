@@ -13,7 +13,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-reload = True
+reload = True 
 checkdumps = False
 
 homepath = os.path.expanduser("~")
@@ -83,7 +83,7 @@ else:
     }
     
     # run the pricelist load...
-    kt_pricelist = kt.get_extract(savepath, kt_packages, tax_profiles, occupancy, debug)
+    kt_pricelist = kt.get_extract(savepath, kt_packages, tax_profiles, occupancy)
     data['pricelist'] = kt_pricelist
     save_pickle_data(data, pickle_file)
 

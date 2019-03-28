@@ -43,12 +43,9 @@ packageid = 'a754F0000000A30QAE'
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 logger.info("Timestamp: {}".format(timestamp))
 
-tax_profiles = data['tax_profiles']
-occupancy = data['occupancy']
-search_values = data['search_values']
-season_start = data['season']['start']
-season_end = data['season']['end']
 kt_packages = data['packages']
+for key, value in data.items():
+    print("\t{} -> {}:{}".format(key, type(value), len(value)))
 
 kt_content = {}
 if 'content' in data:

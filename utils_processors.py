@@ -158,11 +158,9 @@ def process_dates(config, data, kt, savepath):
 
         p_key = p_value.get('id')
         # load in the dates...
-        logger.info("\told {} dates".format(len(data.get(package_field, {}).get(p_key,{}).get(key_field, []))))
-
         p_value['dates'] = kt.get_packagedepartures(savepath, p_key, season_start, season_end)
         
-        logger.info("\tloaded {} dates".format(len(data.get(package_field, {}).get(p_key,{}).get(key_field, []))))
+        logger.info("\tloaded {} dates".format(len(p_value.get(key_field, []))))
     
     return data
 
@@ -198,7 +196,7 @@ def process_prices(config, data, kt, savepath):
         occupancy = data.get('occupancy', {})
         services = p_value.get('service_levels' ,{})        
 
-        logger.info("\told {} pricelist".format(len(data.get(package_field, {}).get(p_key,{}).get(key_field, []))))
+        logger.info("\told {} pricelist".format(len(p_value.get(key_field, []))))
         run_data = kt.walk_package(
             savepath=savepath, 
             packageid=p_key, 
@@ -209,10 +207,10 @@ def process_prices(config, data, kt, savepath):
         )
         if not p_key in data.get('pricelist',{}):
             data['pricelist'][p_key] = {}
-            
+
         p_value['pricelist'] = run_data
         data['pricelist'][p_key]['pricelist'] = run_data
-        logger.info("\tloaded {} dates".format(len(data.get(package_field, {}).get(p_key,{}).get(key_field, []))))
+        logger.info("\tloaded {} dates".format(len(p_value.get(key_field, []))))
 
     return data
 

@@ -191,7 +191,8 @@ def process_prices(config, data, kt, savepath):
             for d in p_value.get('package_departures', []):
                 if d.get('active'):
                     dates.append(d.get('date'))
-
+                    
+        channelid=config.get("presets", {}).get("channelid")
         tax_profiles = data.get('tax_profiles', {})
         occupancy = data.get('occupancy', {})
         services = p_value.get('service_levels' ,{})        
@@ -203,7 +204,8 @@ def process_prices(config, data, kt, savepath):
             dates=dates, 
             tax_profiles=tax_profiles, 
             occupancy=occupancy, 
-            services=services
+            services=services,
+            channelid=channelid
         )
         if not p_key in data.get('pricelist',{}):
             data['pricelist'][p_key] = {}

@@ -99,14 +99,14 @@ def main():
     for process in config.get('process', []):
         logger.info("Running: {}".format(process))
         run_data['processes'].append(process)
-        try:
-            if function_switch.get(process):
-                data = function_switch.get(process)(config, data, kt, savepath)
-            else:
-                logging.warning("no process defined for {}".format(process))
-        except Exception as ex:
-            logger.error('=== ERROR: {} => {}\n\tSTOPPING!'.format(process, ex))
-            break
+        #try:
+        if function_switch.get(process):
+            data = function_switch.get(process)(config, data, kt, savepath)
+        else:
+            logging.warning("no process defined for {}".format(process))
+        #except Exception as ex:
+        #    logger.error('=== ERROR: {} => {}\n\tSTOPPING!'.format(process, ex))
+        #    break
 
     run_data['end'] = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
@@ -127,7 +127,7 @@ def main():
     try:
         save_json("kt_api_data.json", data)
     except Exception as ex:
-        logger.info("Failed to save JSON file.")
+        logger.info("Failed to save JSON file.\n\t{}".format(ex))
 
 if __name__ == '__main__':
     main()

@@ -38,6 +38,10 @@ def get_pricedata(data, rows, tax_profile):
         packageid = row.get('packageid')
         if packageid in data.get('pricelist', {}):
             p_data = data.get('pricelist', {}).get(packageid)
+            if not p_data:
+                logger.error("Missing price data for {}".format(packageid))
+                continue
+
             service_levels = {}
             if 'service_levels' in p_data:
                 for item in p_data['service_levels']:

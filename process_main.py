@@ -1,8 +1,9 @@
 from kaptiorestpython.client import KaptioClient, load_kaptioconfig
 from utils import (
         get_pickle_data, save_pickle_data, save_json, 
-        scanfiles, load_json, extract_rows
+        scanfiles, load_json
     )
+from utils_dict import extract_rows
 from utils_config import get_folderpath, load_config, get_configuration_path
 from utils_processors import (
         backup_data, load_metadata, init_partial, 
@@ -48,7 +49,7 @@ def main():
         "processes": []
     }
 
-    logger.info("Timestamp: {}".format(run_data.get('_runs',{}).get('timestamp')))
+    logger.info("Timestamp: {}".format(run_data.get('run_data',{}).get('timestamp')))
 
     savepath = get_folderpath(config, '_remote', PATHS)
     logger.info('Savepath: {}'.format(savepath))

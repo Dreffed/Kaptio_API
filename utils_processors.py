@@ -89,18 +89,20 @@ def init_partial(config, data, kt, savepath):
         data = {}
 
     if not 'packages' in data:
-        data['packages'] = {}
+        data['packages'] = []
 
     for pkg_id in config.get('packages', []):
         logger.info('\t{}'.format(pkg_id))      
 
         try:
-            data['packages'][pkg_id] = kt.get_package(savepath, pkg_id)
+            run_data = kt.get_package(savepath, pkg_id)
+            data['packages'].append(run_data)
+
         except Exception as ex:
             if config.get('flags', {}).get('switches', {}).get('errors'):
                 logger.error('=== ERROR: {} => {}'.format(pkg_id, ex))
 
-            data['packages'][pkg_id] = {
+            data['packages']= {
                 'error': ex
             }
 
@@ -123,8 +125,9 @@ def promote_custom(config, data, kt, savepath):
 
     logger.info("promoting custom fields...")
 
-    for p_key, p_value in data.get('packages', {}).items():
+    for p_value in data.get('packages', []):
         try:
+            p_key = p_value.get('id')
             for c_key, c_value in p_value.get('custom_fields',{}).items():
                 if not c_key in p_value:
                     data['packages'][p_key][c_key] = c_value

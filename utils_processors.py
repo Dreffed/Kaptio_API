@@ -151,15 +151,16 @@ def process_dates(config, data, kt, savepath):
     logger.info("checking dates...")
     reload = config.get('flags', {}).get('switches', {}).get('reload')
     
-    for p_key, p_value in data.get(package_field, {}).items():
+    for p_value in data.get(package_field, []):
         if p_value.get(key_field, []):
             if not reload:
                 continue
 
+        p_key = p_value.get('id')
         # load in the dates...
         logger.info("\told {} dates".format(len(data.get(package_field, {}).get(p_key,{}).get(key_field, []))))
 
-        data[package_field][p_key][key_field] = kt.get_packagedepartures(savepath, p_key, season_start, season_end)
+        p_value['dates'] = kt.get_packagedepartures(savepath, p_key, season_start, season_end)
         
         logger.info("\tloaded {} dates".format(len(data.get(package_field, {}).get(p_key,{}).get(key_field, []))))
     
@@ -175,16 +176,17 @@ def process_prices(config, data, kt, savepath):
     logger.info("loading prices...")
 
     reload = config.get('flags', {}).get('switches', {}).get('reload')
-    for p_key, p_value in data.get(package_field, {}).items():
+    for p_value in data.get(package_field, []):
         if p_value.get(key_field, []):
             if not reload:
                 continue
         
         if not p_value.get('active'):        
             continue        
+        p_key = p_value.get('id')
 
         dates = []
-        for d in p_value.get('package_dates', []):
+        for d in p_value.get('dates', []):
             dates.append(d)
 
         if len(dates) == 0:
@@ -197,8 +199,7 @@ def process_prices(config, data, kt, savepath):
         services = p_value.get('service_levels' ,{})        
 
         logger.info("\told {} pricelist".format(len(data.get(package_field, {}).get(p_key,{}).get(key_field, []))))
-
-        data[package_field][p_key][key_field] = kt.walk_package(
+        run_data = kt.walk_package(
             savepath=savepath, 
             packageid=p_key, 
             dates=dates, 
@@ -206,6 +207,11 @@ def process_prices(config, data, kt, savepath):
             occupancy=occupancy, 
             services=services
         )
+        if not p_key in data.get('pricelist',{}):
+            data['pricelist'][p_key] = {}
+            
+        p_value['pricelist'] = run_data
+        data['pricelist'][p_key]['pricelist'] = run_data
         logger.info("\tloaded {} dates".format(len(data.get(package_field, {}).get(p_key,{}).get(key_field, []))))
 
     return data

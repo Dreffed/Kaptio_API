@@ -26,14 +26,24 @@ class ThreadWorker(Thread):
             # Get the work from the queue and expand the tuple
             p = self.job_queue.get()
             i += 1
+            if i % 100 == 0:
+                logger.info("Processing {}".format(i))
+                
             try:
                 packageid = p.get('packageid')
                 tax_profiles = p.get('tax_profiles')
                 occupancy = p.get('occupancy')
-                service = p.get('service')
+                services = p.get('services')
                 dates = p.get('dates')
 
-                data = self.kt.walk_package(self.savepath, packageid, dates, tax_profiles, occupancy, service)
+                data = self.kt.walk_package(
+                        savepath=self.savepath, 
+                        packageid=packageid, 
+                        dates=dates, 
+                        tax_profiles=tax_profiles, 
+                        occupancy=occupancy, 
+                        services=services
+                    )
                 p['pricelist'] = data
                 self.result_queue.put(p)
 
@@ -52,12 +62,6 @@ def process_price_parallel(config, data, kt, savepath):
 
     logger.info("loading prices...")
 
-    for _ in range(10):
-        worker = ThreadWorker(kt, job_queue, result_queue, savepath)
-        # Setting daemon to True will let the main thread exit even though the workers are blocking
-        worker.daemon = True
-        worker.start()
-
     reload = config.get('flags', {}).get('switches', {}).get('reload')
     for p_value in data.get(package_field, []):
         #logger.info("p_value: {}".format(p_value))
@@ -73,9 +77,14 @@ def process_price_parallel(config, data, kt, savepath):
             dates.append(d)
 
         if len(dates) == 0:
+            for d in p_value.get('dates', []):
+                dates.append(d)
+
+        if len(dates) == 0:
             for d in p_value.get('package_departures', []):
                 if d.get('active'):
                     dates.append(d.get('date'))
+
         run_data = {
             "packageid": p_key,
             "dates": dates,
@@ -85,7 +94,13 @@ def process_price_parallel(config, data, kt, savepath):
         }
 
         job_queue.put(run_data)
-        
+
+    for _ in range(10):
+        worker = ThreadWorker(kt, job_queue, result_queue, savepath)
+        # Setting daemon to True will let the main thread exit even though the workers are blocking
+        worker.daemon = True
+        worker.start()
+
     # now to wait for the results...
     logger.info("Queue loaded... waiting to finish processing")
     job_queue.join()

@@ -131,7 +131,7 @@ def promote_custom(config, data, kt, savepath):
             for c_key, c_value in p_value.get('custom_fields',{}).items():
                 if not c_key in p_value:
                     p_value[c_key] = c_value
-                    logger.info("\t{} => {}:{}".format(p_key, c_key, c_value))
+                    logger.debug("\t{} => {}:{}".format(p_key, c_key, c_value))
         except Exception as ex:
             if config.get('flags', {}).get('switches', {}).get('errors'):
                 logger.error('=== ERROR: {}:\n{}\n===\n\t => {}'.format(p_key, p_value, ex))
@@ -160,7 +160,7 @@ def process_dates(config, data, kt, savepath):
         # load in the dates...
         p_value['dates'] = kt.get_packagedepartures(savepath, p_key, season_start, season_end)
         
-        logger.info("\tloaded {} dates".format(len(p_value.get(key_field, []))))
+        logger.debug("\tloaded {} => {} dates".format(p_key, len(p_value.get('dates', []))))
     
     return data
 

@@ -395,7 +395,7 @@ class KaptioClient:
                     "packageid":packageid,
                     "query": querystr,
                     "resp": rd
-                }
+                }  
 
                 with open(filepath, 'a') as f:
                     json.dump(json_msg, f, indent=4)

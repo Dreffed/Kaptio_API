@@ -395,7 +395,7 @@ class KaptioClient:
                     "packageid":packageid,
                     "query": querystr,
                     "resp": rd
-                }
+                }  
 
                 with open(filepath, 'a') as f:
                     json.dump(json_msg, f, indent=4)
@@ -494,7 +494,7 @@ class KaptioClient:
         
         kt_processed = scan_packagefiles(savepath)
         
-        data = {}
+        data = {} 
         for p in packages:
             p_count += 1
             packageid = p.get('id')

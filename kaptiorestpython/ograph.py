@@ -24,6 +24,7 @@ class KaptioOGraph:
     instance_url = None
 
     def __init__(self, baseurl, sfurl, username, password, security_token, sandbox, clientid, clientsecret):
+        self.logger = logging.getLogger(__name__)
         assert(baseurl is not None)
         assert(sfurl is not None)
         assert(username is not None)
@@ -60,8 +61,8 @@ class KaptioOGraph:
         r = requests.post("{}/services/oauth2/token".format(self.sfurl), params=params)
         self.access_token = r.json().get("access_token")
         self.instance_url = r.json().get("instance_url")
-        self.logger.info("Access Token:", self.access_token)
-        self.logger.info("Instance URL", self.instance_url)      
+        self.logger.info("Access Token: {}".format(self.access_token))
+        self.logger.info("Instance URL: {}".format(self.instance_url))      
 
     def get_content(self, packageid):
         if self.access_token is None:

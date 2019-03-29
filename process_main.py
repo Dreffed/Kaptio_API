@@ -49,7 +49,7 @@ def main():
         "processes": []
     }
 
-    logger.info("Timestamp: {}".format(run_data.get('run_data',{}).get('timestamp')))
+    logger.info("Timestamp: {}".format(run_data.get('run_data',{}).get('date')))
 
     savepath = get_folderpath(config, '_remote', PATHS)
     logger.info('Savepath: {}'.format(savepath))

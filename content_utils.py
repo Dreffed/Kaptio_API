@@ -71,14 +71,3 @@ def get_hgh(content):
                 if text:
                     data.append(text)
     return data
-
-def stripUnicode(text):
-    q = re.compile(r'\\u([\d]{4})')
-    newchr = {
-        '2019': "'",
-        '2013': "-",
-        '2044': "/"
-    }
-    
-
-        

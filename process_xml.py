@@ -48,6 +48,15 @@ kt_packages = data['packages']
 kt_pricelist = data['pricelist']
 kt_content = data['content']
 
+year = 2020
+tax_profile = 'Foreign' #'Domestic' #'Foreign' #'Zero Rated'
+for key, value in tax_profiles.items():
+    starred = " "
+    if key == tax_profile:
+        starred = "*"
+    logger.info("\t{}{} => {}".format(starred, key, value))
+
+
 logger.info("Generating XML:\n\t{} packages\n\t{} prices\n\t{} contents".format(
                     len(kt_packages), 
                     len(kt_pricelist), 
@@ -97,9 +106,6 @@ departure_types = [
 # webItinerary
 # highlights
 # 
-year = 2020
-tax_profile = 'Zero Rated'
-
 xml_root = Element('RockyMountaineer')
 xml_products = SubElement(xml_root, 'products', bookingType=tax_profile, date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
@@ -249,6 +255,8 @@ for p in kt_packages:
 
 logger.info("{} exported".format(package_count))
 
-xml_file = path.join(savepath, 'data', 'webdata-zerorated-formated.xml') 
+xml_file = path.join(savepath, 'data', 'webdata-{}-formated.xml'.format(tax_profile.replace(' ','').lower())) 
 with codecs.open(xml_file, 'w', encoding='utf8') as fp:
     fp.write(prettify(xml_root))
+
+logger.info("Saved file {}".format(xml_file))

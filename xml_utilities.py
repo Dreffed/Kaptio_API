@@ -1,5 +1,9 @@
 from xml.etree.ElementTree import ElementTree, Element, SubElement, Comment, tostring
 import json
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def get_farebase(pricelist, tax_profile, packageid, service_level_id):
     
@@ -22,7 +26,7 @@ def get_farebase(pricelist, tax_profile, packageid, service_level_id):
                 if not o_key in fareBasis:
                     fareBasis[o_key] = {}
                 for p_item in o_value:
-                    if p_item['service_level_id'] == service_level_id:
+                    if p_item.get('service_level_id') == service_level_id:
                         if len(p_item['errors']) > 0:
                             continue
 

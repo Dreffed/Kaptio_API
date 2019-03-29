@@ -62,6 +62,12 @@ logger.info("Timestamp: {}".format(timestamp))
 
 tax_profiles = data['tax_profiles']
 tax_profile = 'Zero Rated'
+for key, value in tax_profiles.items():
+    starred = " "
+    if key == tax_profile:
+        starred = "*"
+    logger.info("\t{}{} => {}".format(starred, key, value))
+
 occupancy = data['occupancy']
 search_values = data['search_values']
 season_start = data['season']['start']
@@ -88,7 +94,6 @@ for p in kt_packages:
 
     packagerows.append(row)
 logger.info("Found {} packages".format(len(packagerows)))
-
 
 error_list = []
 price_data = []

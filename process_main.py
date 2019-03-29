@@ -1,13 +1,20 @@
 from kaptiorestpython.client import KaptioClient, load_kaptioconfig
 from utils import (
         get_pickle_data, save_pickle_data, save_json, 
-        scanfiles, load_json, extract_rows
+        scanfiles, load_json
     )
+from utils_dict import extract_rows
 from utils_config import get_folderpath, load_config, get_configuration_path
 from utils_processors import (
         backup_data, load_metadata, init_partial, 
         promote_custom, process_dates, process_prices, 
-        process_packages, clear_data
+        process_packages, clear_data, process_content,
+        process_items
+    )
+from utils_parallel import process_price_parallel
+from utils_output import (
+        process_allsell, process_bulkloader, 
+        process_errors, process_xml
     )
 import json
 import pickle
@@ -42,7 +49,7 @@ def main():
         "processes": []
     }
 
-    logger.info("Timestamp: {}".format(run_data.get('_runs',{}).get('timestamp')))
+    logger.info("Timestamp: {}".format(run_data.get('run_data',{}).get('timestamp')))
 
     savepath = get_folderpath(config, '_remote', PATHS)
     logger.info('Savepath: {}'.format(savepath))
@@ -70,12 +77,13 @@ def main():
         'custom': promote_custom,
         'dates': process_dates,
         'prices': process_prices,
-        #'errors': process_errors,
-        #'content': process_content,
-        #'items': process_items,
-        #'allsell': process_allsell,
-        #'bulkloader': process_bulkloader,
-        #'xml': process_xml
+        'price_para': process_price_parallel,
+        'errors': process_errors,
+        'content': process_content,
+        'items': process_items,
+        'allsell': process_allsell,
+        'bulkloader': process_bulkloader,
+        'xml': process_xml
     }
 
     if logger.level == logging.DEBUG and len(data)> 0:
@@ -91,14 +99,14 @@ def main():
     for process in config.get('process', []):
         logger.info("Running: {}".format(process))
         run_data['processes'].append(process)
-        try:
-            if function_switch.get(process):
-                data = function_switch.get(process)(config, data, kt, savepath)
-            else:
-                logging.warning("no process defined for {}".format(process))
-        except Exception as ex:
-            logger.error('=== ERROR: {} => {}'.format(process, ex))
-            break
+        #try:
+        if function_switch.get(process):
+            data = function_switch.get(process)(config, data, kt, savepath)
+        else:
+            logging.warning("no process defined for {}".format(process))
+        #except Exception as ex:
+        #    logger.error('=== ERROR: {} => {}\n\tSTOPPING!'.format(process, ex))
+        #    break
 
     run_data['end'] = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
@@ -116,7 +124,10 @@ def main():
             logger.info("\t{} : No Values".format(key))
 
     save_pickle_data(data, pickle_file)
-    save_json("kt_api_data.json", data)
+    try:
+        save_json("kt_api_data.json", data)
+    except Exception as ex:
+        logger.info("Failed to save JSON file.\n\t{}".format(ex))
 
 if __name__ == '__main__':
     main()

@@ -130,8 +130,8 @@ def promote_custom(config, data, kt, savepath):
             p_key = p_value.get('id')
             for c_key, c_value in p_value.get('custom_fields',{}).items():
                 if not c_key in p_value:
-                    data['packages'][p_key][c_key] = c_value
-                    logger.info("\t{} => {}:{}".format(p_key, c_key, c_value))
+                    p_value[c_key] = c_value
+                    logger.debug("\t{} => {}:{}".format(p_key, c_key, c_value))
         except Exception as ex:
             if config.get('flags', {}).get('switches', {}).get('errors'):
                 logger.error('=== ERROR: {}:\n{}\n===\n\t => {}'.format(p_key, p_value, ex))
@@ -160,7 +160,7 @@ def process_dates(config, data, kt, savepath):
         # load in the dates...
         p_value['dates'] = kt.get_packagedepartures(savepath, p_key, season_start, season_end)
         
-        logger.info("\tloaded {} dates".format(len(p_value.get(key_field, []))))
+        logger.debug("\tloaded {} => {} dates".format(p_key, len(p_value.get('dates', []))))
     
     return data
 
@@ -191,7 +191,8 @@ def process_prices(config, data, kt, savepath):
             for d in p_value.get('package_departures', []):
                 if d.get('active'):
                     dates.append(d.get('date'))
-
+                    
+        channelid=config.get("presets", {}).get("channelid")
         tax_profiles = data.get('tax_profiles', {})
         occupancy = data.get('occupancy', {})
         services = p_value.get('service_levels' ,{})        
@@ -203,7 +204,8 @@ def process_prices(config, data, kt, savepath):
             dates=dates, 
             tax_profiles=tax_profiles, 
             occupancy=occupancy, 
-            services=services
+            services=services,
+            channelid=channelid
         )
         if not p_key in data.get('pricelist',{}):
             data['pricelist'][p_key] = {}
@@ -214,12 +216,6 @@ def process_prices(config, data, kt, savepath):
 
     return data
 
-def process_errors(config, data, kt, savepath):
-    if not data:
-        data = {}
-
-    return data
-
 def process_content(config, data, kt, savepath):
     if not data:
         data = {}
@@ -227,24 +223,6 @@ def process_content(config, data, kt, savepath):
     return data
 
 def process_items(config, data, kt, savepath):
-    if not data:
-        data = {}
-
-    return data
-
-def process_allsell(config, data, kt, savepath):
-    if not data:
-        data = {}
-
-    return data
-
-def process_bulkloader(config, data, kt, savepath):
-    if not data:
-        data = {}
-
-    return data
-
-def process_xml(config, data, kt, savepath):
     if not data:
         data = {}
 

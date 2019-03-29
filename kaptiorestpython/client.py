@@ -339,8 +339,9 @@ class KaptioClient:
                 pass
         return rd
 
-    def get_packageprice(self, savepath, packageid, date_from, date_to, taxprofileid = 'a8H4F0000003tsfUAA', channelid = 'a6H4F0000000DkMUAU', 
-                        occupancy = '1=1,0', services = 'a7r4F0000000AloQAE', debug=False):
+    def get_packageprice(self, savepath, packageid, date_from, date_to, 
+                        taxprofileid = 'a8H4F0000003tsfUAA', channelid = 'a6H4F0000000DkMUAU', 
+                        occupancy = '1=1,0', services = 'a7r4F0000000AloQAE'):
         data = []
         errors = []
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -403,7 +404,7 @@ class KaptioClient:
 
         return {'data':data, 'errors':errors}
 
-    def walk_package(self, savepath, packageid, dates, tax_profiles, occupancy, services):
+    def walk_package(self, savepath, packageid, dates, tax_profiles, occupancy, services, channelid="a6H4F0000000DkbUAE"):
         """
         if not isinstance(dates, list):
             raise "[dates] should be a list of date strings 'YYYY-mm-dd'"
@@ -432,7 +433,7 @@ class KaptioClient:
                 for o_key, o_value in occupancy.items():
                     pricelist = self.get_packageprice(savepath, packageid, date_from=d, date_to=d, 
                                                 taxprofileid=t_value, occupancy=o_value,
-                                                services=services_str)
+                                                services=services_str, channelid=channelid)
                     data[d][t_key][o_key] = []
                     try:
                         if len(pricelist['data']) > 0:
@@ -448,7 +449,7 @@ class KaptioClient:
                             data['errors'] = 0
                         data['errors'] += 1
                         data[d][t_key][o_key] = [{"errors" : [{"room_index": 0, "error": {"code": 500, "message": "Internal Server Error 500", "details": ""}}]}]
-        self.logger.info("\tCalls:{}".format(c_count))
+        self.logger.info("\t{} => {}".format(packageid, c_count))
         return data
 
     def worker_pool(self, package):
@@ -482,7 +483,7 @@ class KaptioClient:
         p.join()
         return pool_data
 
-    def get_extract(self, savepath, packages, tax_profiles, occupancy, debug=False):
+    def get_extract(self, savepath, packages, tax_profiles, occupancy, channelid="a6H4F0000000DkbUAE", debug=False):
         p_count = 0
         s_count = 0
         l_count = 0
@@ -517,10 +518,14 @@ class KaptioClient:
                 p['product_code'] = p.get('custom_fields',{}).get('product_code')
 
                 if not 'pricelist' in p:
-                    p['pricelist'] = self.walk_package(savepath, packageid, dates=p['dates'], tax_profiles=tax_profiles, occupancy=occupancy, services=p['service_levels'])
+                    p['pricelist'] = self.walk_package(
+                                savepath, packageid, dates=p['dates'], 
+                                tax_profiles=tax_profiles, channelid=channelid,
+                                occupancy=occupancy, 
+                                services=p['service_levels'])
                 else:
                     if 'errors' in p['pricelist']:
-                        self.logger.info("Fixing errors: {} => {}".format(p['id'], p['name']))
+                        self.logger.error("Fixing errors: {} => {}".format(p['id'], p['name']))
                         p['pricelist'] = self.walk_package(savepath, p['id'], dates=p['dates'], tax_profiles=tax_profiles, occupancy=occupancy, services=p['service_levels'])
                     else:
                         self.logger.info("Skipping: {} => {}".format(p['id'], p['name']))

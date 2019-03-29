@@ -1,7 +1,8 @@
 # load the dependancies
 from kaptiorestpython.client import KaptioClient
 from kaptiorestpython.utils_kaptio import load_kaptioconfig
-from utils import get_pickle_data, save_pickle_data, save_json, scanfiles, load_json, extract_rows
+from utils import get_pickle_data, save_pickle_data, save_json, scanfiles, load_json
+from utils_dict import extract_rows
 from xml_utilities import get_farebase
 from content_utils import get_web, get_svc, get_hgh
 from os import path
@@ -88,7 +89,7 @@ save_json(file_path, kt_content)
 file_path = path.join(savepath, "data", "kt_pcontent_{}.json".format(timestamp))
 save_json(file_path, kt_pcontent)
 
-departure_tyes = [
+departure_types = [
     'Anyday', 'Seasonal', 'Fixed'
 ]
 
@@ -133,9 +134,9 @@ for p in kt_packages:
 
     try: # default to 2: fixed
         packagetypeid = int(p['departure_type_id'])
-        p_fields['packageType'] = departure_tyes[packagetypeid]
+        p_fields['packageType'] = departure_types[packagetypeid]
     except:
-        p_fields['packageType'] = departure_tyes[2]
+        p_fields['packageType'] = departure_types[2]
 
     p_fields['duration'] = str(p['length'])
     

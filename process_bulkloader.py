@@ -9,7 +9,6 @@ from openpyxl.utils import column_index_from_string
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font, Color
 
 import string
-import json
 import pickle
 import os
 import path
@@ -92,7 +91,6 @@ logger.info("Found {} packages".format(len(packagerows)))
 
 
 error_list = []
-
 price_data = []
 for row in packagerows:
     packageid = row['packageid']

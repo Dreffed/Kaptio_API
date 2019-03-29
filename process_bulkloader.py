@@ -62,6 +62,7 @@ timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 logger.info("Timestamp: {}".format(timestamp))
 
 tax_profiles = data['tax_profiles']
+tax_profile = 'Zero Rated'
 occupancy = data['occupancy']
 search_values = data['search_values']
 season_start = data['season']['start']
@@ -136,7 +137,7 @@ for row in packagerows:
                 b['sun'] = ('Y' if dow =='Sun' else '')
 
                 for t_key, t_value in d_value.items():
-                    if t_key != 'Zero Rated':
+                    if t_key != tax_profile:
                         continue
                     o_data  = {}
                     for o_key, o_value in t_value.items():
@@ -283,10 +284,10 @@ else:
 
 # now to load the data into the 
 year = 2020
-version = "1.1"
+version = "1.2"
 
 excel_feed_path = os.path.join(savepath, 'templates', r'Rocky Bulk Cost Loader template.xlsx')
-bulk_file_name = 'Rocky Bulk Loader.{}.{}.xlsx'.format(year, version)
+bulk_file_name = 'Rocky Bulk Loader.{}.{}.{}.xlsx'.format(tax_profile.replace(' ',''),year, version)
 
 row_idx = excel_config['start_row']-1
 

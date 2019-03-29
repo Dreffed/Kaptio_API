@@ -493,7 +493,7 @@ class KaptioClient:
         
         kt_processed = scan_packagefiles(savepath)
         
-        data = {}
+        data = {} 
         for p in packages:
             p_count += 1
             packageid = p.get('id')

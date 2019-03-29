@@ -7,3 +7,4 @@ tmp_*.py
 *.csv
 *.xlsx
 *.zip
+*.log

@@ -115,7 +115,11 @@ def process_price_parallel(config, data, kt, savepath):
         # Get the work from the queue and expand the tuple
         try:
             run_data = result_queue.get(False)
-            data['pricelist'][run_data.get("packageid")] = run_data.get('pricelist')
+            packageid = run_data.get("packageid")
+            if not data.get('pricelist', {}).get(packageid):
+                data['pricelist'][packageid] = {}
+                    
+            data['pricelist'][packageid]['pricelist'] = run_data.get('pricelist')
 
         except Empty:
             break

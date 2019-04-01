@@ -174,6 +174,12 @@ def process_prices(config, data, kt, savepath):
     logger.info("loading prices...")
 
     reload = config.get('flags', {}).get('switches', {}).get('reload')
+
+    channelid=config.get("presets", {}).get("channelid")
+    currency=config.get("presets", {}).get("currency")
+    tax_profiles = data.get('tax_profiles', {})
+    occupancy = data.get('occupancy', {})
+
     for p_value in data.get(package_field, []):
         if p_value.get(key_field, []):
             if not reload:
@@ -192,9 +198,6 @@ def process_prices(config, data, kt, savepath):
                 if d.get('active'):
                     dates.append(d.get('date'))
                     
-        channelid=config.get("presets", {}).get("channelid")
-        tax_profiles = data.get('tax_profiles', {})
-        occupancy = data.get('occupancy', {})
         services = p_value.get('service_levels' ,{})        
 
         logger.info("\told {} pricelist".format(len(p_value.get(key_field, []))))
@@ -205,7 +208,8 @@ def process_prices(config, data, kt, savepath):
             tax_profiles=tax_profiles, 
             occupancy=occupancy, 
             services=services,
-            channelid=channelid
+            channelid=channelid,
+            currency=currency
         )
         if not p_key in data.get('pricelist',{}):
             data['pricelist'][p_key] = {}

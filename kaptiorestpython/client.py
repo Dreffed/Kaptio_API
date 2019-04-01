@@ -341,7 +341,7 @@ class KaptioClient:
 
     def get_packageprice(self, savepath, packageid, date_from, date_to, 
                         taxprofileid = 'a8H4F0000003tsfUAA', channelid = 'a6H4F0000000DkMUAU', 
-                        occupancy = '1=1,0', services = 'a7r4F0000000AloQAE'):
+                        occupancy = '1=1,0', services = 'a7r4F0000000AloQAE', currency="CAD"):
         data = []
         errors = []
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -357,7 +357,7 @@ class KaptioClient:
         search_values = {
             "tax_profile_id":taxprofileid,  # Required    #Zero
             "channel_id":channelid,         # Required    # travel agent
-            "currency":"CAD",               # Required
+            "currency":currency,               # Required
             "occupancy":occupancy,          # Required
             "service_level_ids":services,   
             "date_from":date_from,

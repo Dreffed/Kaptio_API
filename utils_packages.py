@@ -11,7 +11,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def process_packages(kaptioclient, savepath, packages, tax_profiles, occupancy, channelid):
+def process_packages(kaptioclient, savepath, packages, tax_profiles, occupancy, channelid, currency="CAD"):
     package_count = 0
     price_count = 0
     error_count = 0
@@ -99,8 +99,8 @@ def process_packages(kaptioclient, savepath, packages, tax_profiles, occupancy, 
                                     search_values = {
                                         "tax_profile_id":taxprofileid,  # Required    #Zero
                                         "channel_id":channelid,         # Required    # travel agent
-                                        "currency":"CAD",               # Required
-                                        "occupancy":occ_str,          # Required
+                                        "currency":currency,            # Required
+                                        "occupancy":occ_str,            # Required
                                         "service_level_ids":p_item.get('service_level_id'),   
                                         "date":d_key
                                     }

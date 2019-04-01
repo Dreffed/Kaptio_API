@@ -21,7 +21,13 @@ def process_errors(config, data, kt, savepath):
         data = {}
     
     channelid = config.get('presets', {}).get('channelid')
-    tax_profiles = data.get('tax_profiles')
+    
+    use_profiles = data.get('tax_profiles', {})
+    tax_profiles = {}
+    for tp in config.get("presets", {}).get("tax_profiles"):
+        if tp in use_profiles:
+            tax_profiles[tp] = use_profiles.get(tp)
+    
     occupancy = data.get('occupancy')
     kt_packages = data.get('packages')
     

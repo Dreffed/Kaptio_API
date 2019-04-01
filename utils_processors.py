@@ -177,7 +177,13 @@ def process_prices(config, data, kt, savepath):
 
     channelid=config.get("presets", {}).get("channelid")
     currency=config.get("presets", {}).get("currency")
-    tax_profiles = data.get('tax_profiles', {})
+
+    use_profiles = data.get('tax_profiles', {})
+    tax_profiles = {}
+    for tp in config.get("presets", {}).get("tax_profiles"):
+        if tp in use_profiles:
+            tax_profiles[tp] = use_profiles.get(tp)
+    
     occupancy = data.get('occupancy', {})
 
     for p_value in data.get(package_field, []):

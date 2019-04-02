@@ -66,7 +66,10 @@ def process_price_parallel(config, data, kt, savepath):
 
     reload = config.get('flags', {}).get('switches', {}).get('reload')
     currency=config.get("presets", {}).get("currency", "CAD")
-
+    try:
+        max_threads = int(config.get("presets", {}).get("threads", 3))
+    except:
+        max_threads = 3
     for p_value in data.get(package_field, []):
         #logger.info("p_value: {}".format(p_value))
         if p_value.get(key_field, []):
@@ -100,7 +103,7 @@ def process_price_parallel(config, data, kt, savepath):
 
         job_queue.put(run_data)
 
-    for _ in range(10):
+    for _ in range(max_threads):
         worker = ThreadWorker(kt, job_queue, result_queue, savepath)
         # Setting daemon to True will let the main thread exit even though the workers are blocking
         worker.daemon = True

@@ -3,7 +3,7 @@ import json
 import os
 import requests
 from datetime import datetime
-from kaptiorestpython.helper.http_lib import HttpLib
+from kaptiorestpython.helper.http_lib import HttpLib, _rate_limited
 from kaptiorestpython.helper.exceptions import APIException
 from kaptiorestpython.utils_kaptio import has_empty_warning, load_kaptioconfig, display_fields
 from utils import save_json, scan_packagefiles
@@ -18,6 +18,7 @@ class KaptioClient:
     auth_key = None
     auth_secret = None
     headers = None
+    num_calls_per_second = 5
 
     def __init__(self, baseurl, auth_key, auth_secret):
         assert(baseurl is not None)
@@ -25,7 +26,6 @@ class KaptioClient:
         assert(auth_secret is not None)
 
         self.logger = logging.getLogger(__name__)
-        self.logger.level = logging.DEBUG
 
         self.baseurl = baseurl
         self.auth_key = auth_key
@@ -33,6 +33,7 @@ class KaptioClient:
         self.headers = {'Authorization': 'Keypair key={} secret={}'.format(auth_key, auth_secret),
           "Content-Type":"application/json"}
 
+    @_rate_limited(num_calls_per_second)
     def api_data(self, url_data, paramstr ="", querystr = "", body = None):
         thisurl = 'http://{}/{}/{}{}{}'.format(self.baseurl, url_data['version'], url_data['suburl'], paramstr, querystr)
         self.logger.debug("{}:{}\n\t{}". format(url_data["name"], url_data['method'], thisurl))
@@ -46,6 +47,7 @@ class KaptioClient:
         except:
             return None
 
+    @_rate_limited(num_calls_per_second)
     def api_list(self, url_data, paramstr, querystr, body = None):
         thisurl = 'http://{}/{}/{}{}{}'.format(self.baseurl, url_data['version'], url_data['suburl'], paramstr, querystr)
         self.logger.debug("{}:{}\n\t{}". format(url_data["name"], url_data['method'], thisurl))
@@ -228,9 +230,10 @@ class KaptioClient:
         r = self.api_data( url_data, paramstr, querystr)
         if r.status_code == 200:
             data = self.save_response(savepath, url_data['name'], r, packageid)
+            return data
         else:
-            self.logger.info("Failed: {} => {}".format(r, r.text))    
-        return data
+            self.logger.info("Failed: {} => {}\n\t{}\n\t{}\n\t{}".format(r, r.text, json.dumps(url_data, indent=2), querystr, paramstr))    
+        return {}
 
     def get_item(self, savepath, itemid):
         url_data = {}

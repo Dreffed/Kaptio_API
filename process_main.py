@@ -6,7 +6,7 @@ from utils import (
 from utils_dict import extract_rows
 from utils_config import get_folderpath, load_config, get_configuration_path
 from utils_processors import (
-        backup_data, load_metadata, init_partial, 
+        save_data, backup_data, load_metadata, init_partial, 
         promote_custom, process_dates, process_prices, 
         process_packages, clear_data, process_content,
         process_items
@@ -66,6 +66,7 @@ def main():
 
 
     function_switch = {
+        'savedata': save_data,
         'backup': backup_data,
         'clear_data': clear_data,
         'partial': init_partial,
@@ -88,7 +89,12 @@ def main():
         config['presets']['currency'] = currency
         pickle_file = get_configuration_path(config, 'pickle', PATHS)
         name, ext = os.path.splitext(pickle_file)
-        pickle_file = os.path.join(name, currency, ext)
+        pickle_file = "{}_{}{}".format(name,currency, ext)
+        logger.info("Loading pickle file {}".format(pickle_file))
+        if not 'presets' in config:
+            config['presets']
+
+        config['presets']['pickle'] = pickle_file
         data = get_pickle_data(pickle_file)
 
         if logger.level == logging.DEBUG and len(data)> 0:

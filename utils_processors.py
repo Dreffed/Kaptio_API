@@ -75,6 +75,13 @@ def clear_data(config, data, kt, savepath):
 
     return data
 
+def save_data(config, data, kt, savepath):
+    if not data:
+        data = {}
+    pickle_file = config.get('presets', {}).get('pickle')
+    save_pickle_data(data, pickle_file)
+    return data
+
 def backup_data(config, data, kt, savepath):
     if not data:
         data = {}

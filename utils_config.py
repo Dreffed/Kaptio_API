@@ -53,6 +53,16 @@ def load_config(config_file):
             }
         }
 
+        settings['presets'] = {
+            'channelid':'a6H4F0000000DkMUAU',
+            'currencies':['USD', 'AUD'],
+            'currency':'CAD',
+            'tax_profiles':['Zero Rated', 'Foreign', 'Domestic']
+        }
+        settings['season'] = {
+            'start': '2020-03-01',
+            'end': '2020-10-31'
+        },
         settings['regex'] = {
             'pickle': {
                 'folders':['LOCAL'],
@@ -76,26 +86,26 @@ def load_config(config_file):
         }
 
         settings['folders'] = {
-            "KTAPIDATA": {
-                "name":"Kaptio API Data",
-                "pathtype": "REL",
-                "rootpath":"HOME",
-                "basefolders":["OneDrive - Great Canadian Railtour Co", "Jupyter_NB", "data"],
-                "regex":""
+            'KTAPIDATA': {
+                'name':'Kaptio API Data',
+                'pathtype': 'REL',
+                'rootpath':'HOME',
+                'basefolders':['OneDrive - Great Canadian Railtour Co', 'Jupyter_NB', 'data'],
+                'regex':''
             },
-            "KTAPICONFIG": {
-                "name":"Kaptio API Config",
-                "pathtype": "REL",
-                "rootpath":"HOME",
-                "basefolders":["OneDrive - Great Canadian Railtour Co", "Jupyter_NB", "config"],
-                "regex":""
+            'KTAPICONFIG': {
+                'name':'Kaptio API Config',
+                'pathtype': 'REL',
+                'rootpath':'HOME',
+                'basefolders':['OneDrive - Great Canadian Railtour Co', 'Jupyter_NB', 'config'],
+                'regex':''
             },
-            "KTAPI": {
-                "name":"Kaptio API Tool",
-                "pathtype": "REL",
-                "rootpath":"HOME",
-                "basefolders":["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"],
-                "regex":""
+            'KTAPI': {
+                'name':'Kaptio API Tool',
+                'pathtype': 'REL',
+                'rootpath':'HOME',
+                'basefolders':['OneDrive - Great Canadian Railtour Co', 'Jupyter_NB'],
+                'regex':''
             },
             '_locations':{
                 '_data':'KTAPIDATA',
@@ -106,11 +116,11 @@ def load_config(config_file):
             }
         }
 
-        with open(config_file, "w") as f:
+        with open(config_file, 'w') as f:
             json.dump(settings, f, indent=4)
         
     # load this into
-    with open(config_file, "r") as f:  
+    with open(config_file, 'r') as f:  
         config = json.load(f)
     return config
 

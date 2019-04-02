@@ -79,7 +79,7 @@ def process_xml(config, data, kt, savepath):
     #xml_fields = load_json(xmlconfigpath)
     currency=config.get("presets", {}).get("currency", "CAD")
     season_date = config.get('season', {}).get('start')
-    season_year = season_date.left(4)
+    season_year = season_date[:4]
 
     contentconfigpath = "content_fields.json"
     content_fields = load_json(contentconfigpath)

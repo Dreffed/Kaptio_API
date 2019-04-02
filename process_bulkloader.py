@@ -61,6 +61,7 @@ timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 logger.info("Timestamp: {}".format(timestamp))
 
 tax_profile = 'Domestic' #'Foreign' #'Zero Rated'
+tax_profiles = data.get('tax_profiles', {})
 for key, value in tax_profiles.items():
     starred = " "
     if key == tax_profile:

@@ -1,4 +1,5 @@
 from kaptiorestpython.client import KaptioClient, load_kaptioconfig
+from kaptiorestpython.ograph import KaptioOGraph
 from utils import (
         get_pickle_data, save_pickle_data, save_json, 
         scanfiles, load_json

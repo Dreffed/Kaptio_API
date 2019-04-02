@@ -1,5 +1,6 @@
 # load the dependancies
 from kaptiorestpython.client import KaptioClient, load_kaptioconfig
+from kaptiorestpython.ograph import KaptioOGraph
 from utils import get_pickle_data, save_pickle_data, save_json, scanfiles, copy_pickles
 import json
 import pickle
@@ -237,7 +238,22 @@ def process_prices(config, data, kt, savepath):
 def process_content(config, data, kt, savepath):
     if not data:
         data = {}
+    
+    kt_packages = data.get('packages', [])
+    kt_content = {}
+    if 'content' in data:
+        del data['content']
+        
+    kt = get_ograph(config, savepath)
 
+    if not 'content' in data:
+        for p in kt_packages:
+            # get the content
+            if not p['id'] in kt_content:
+                kt_content[p['id']] = kt.get_content(p['id'])
+        data['content'] = kt_content
+
+    logger.info("Found content for {}".format(len(kt_content)))
     return data
 
 def process_items(config, data, kt, savepath):
@@ -245,3 +261,24 @@ def process_items(config, data, kt, savepath):
         data = {}
 
     return data
+
+def get_ograph(config, savepath):
+    kaptio_config_file = os.path.join(savepath, "config", "kaptio_settings.json")
+    kaptio_config = load_kaptioconfig(kaptio_config_file)    
+    
+    debug = True
+    baseurl = kaptio_config['ograph']['baseurl']
+    sfurl = kaptio_config['sf']['url']
+    username = kaptio_config['sf']['username']
+    password = kaptio_config['sf']['passwd']
+    security_token = kaptio_config['sf']['token']
+    sandbox = True
+    clientid = kaptio_config['ograph']['clientid']
+    clientsecret = kaptio_config['ograph']['clientsecret']
+
+    kt = KaptioOGraph(baseurl, sfurl, username, password, security_token, sandbox, clientid, clientsecret)
+    return kt
+
+def get_ktapi(config, savepath):
+    kt = KaptioClient(baseurl, kaptio_config['api']['auth']['key'], kaptio_config['api']['auth']['secret'])
+    return kt

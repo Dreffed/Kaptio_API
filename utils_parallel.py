@@ -35,6 +35,7 @@ class ThreadWorker(Thread):
                 occupancy = p.get('occupancy')
                 services = p.get('services')
                 dates = p.get('dates')
+                currency = p.get('currency', 'CAD')
 
                 data = self.kt.walk_package(
                         savepath=self.savepath, 
@@ -42,7 +43,8 @@ class ThreadWorker(Thread):
                         dates=dates, 
                         tax_profiles=tax_profiles, 
                         occupancy=occupancy, 
-                        services=services
+                        services=services,
+                        currency=currency
                     )
                 p['pricelist'] = data
                 self.result_queue.put(p)
@@ -63,6 +65,8 @@ def process_price_parallel(config, data, kt, savepath):
     logger.info("loading prices...")
 
     reload = config.get('flags', {}).get('switches', {}).get('reload')
+    currency=config.get("presets", {}).get("currency", "CAD")
+
     for p_value in data.get(package_field, []):
         #logger.info("p_value: {}".format(p_value))
         if p_value.get(key_field, []):
@@ -90,7 +94,8 @@ def process_price_parallel(config, data, kt, savepath):
             "dates": dates,
             "tax_profiles": data.get('tax_profiles', {}),
             "occupancy": data.get('occupancy', {}),
-            "services": p_value.get('service_levels' ,{})
+            "services": p_value.get('service_levels' ,{}),
+            "currency": currency
         }
 
         job_queue.put(run_data)

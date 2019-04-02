@@ -404,7 +404,7 @@ class KaptioClient:
 
         return {'data':data, 'errors':errors}
 
-    def walk_package(self, savepath, packageid, dates, tax_profiles, occupancy, services, channelid="a6H4F0000000DkbUAE"):
+    def walk_package(self, savepath, packageid, dates, tax_profiles, occupancy, services, channelid="a6H4F0000000DkbUAE", currency="CAD"):
         """
         if not isinstance(dates, list):
             raise "[dates] should be a list of date strings 'YYYY-mm-dd'"
@@ -433,7 +433,7 @@ class KaptioClient:
                 for o_key, o_value in occupancy.items():
                     pricelist = self.get_packageprice(savepath, packageid, date_from=d, date_to=d, 
                                                 taxprofileid=t_value, occupancy=o_value,
-                                                services=services_str, channelid=channelid)
+                                                services=services_str, channelid=channelid, currency=currency)
                     data[d][t_key][o_key] = []
                     try:
                         if len(pricelist['data']) > 0:
@@ -451,37 +451,6 @@ class KaptioClient:
                         data[d][t_key][o_key] = [{"errors" : [{"room_index": 0, "error": {"code": 500, "message": "Internal Server Error 500", "details": ""}}]}]
         self.logger.info("\t{} => {}".format(packageid, c_count))
         return data
-
-    def worker_pool(self, package):
-        w_results = {}
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        packageid = package['id']
-        if package['record_type_name'] == 'Package' and package['active']:
-            if package['name'].lower().startswith('test'):
-                self.logger.info("Found test package: {} -> {}".format(package['id'], package['name']))
-                return w_results
-        
-            file_path = os.path.join(self.savepath, "data", "kt_packages_{}_{}.json".format(package['id'], timestamp))
-
-            package['services'] = ""
-            if 'service_levels' in package:
-                package['services'] = [s['id'] for s in package['service_levels']]
-
-            package['pricelist'] = self.walk_package(self.savepath, package['id'], 
-                            dates=package['dates'], tax_profiles=package['tax_profiles'], 
-                            occupancy=package['occupancy'], 
-                            services=package['service_levels'])
-            save_json(file_path, package)
-        w_results[packageid] = package
-        return w_results
-
-    def run_pool(self, savepath, pool_count, packages):
-        self.savepath = savepath
-        p = multiprocessing.Pool(pool_count)
-        pool_data = p.map(self.worker_pool, packages)
-        p.close()
-        p.join()
-        return pool_data
 
     def get_extract(self, savepath, packages, tax_profiles, occupancy, channelid="a6H4F0000000DkbUAE", debug=False):
         p_count = 0

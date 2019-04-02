@@ -176,8 +176,8 @@ def process_prices(config, data, kt, savepath):
     reload = config.get('flags', {}).get('switches', {}).get('reload')
 
     channelid=config.get("presets", {}).get("channelid")
-    currency=config.get("presets", {}).get("currency")
-
+    currency=config.get("presets", {}).get("currency", "CAD")
+    
     use_profiles = data.get('tax_profiles', {})
     tax_profiles = {}
     for tp in config.get("presets", {}).get("tax_profiles"):

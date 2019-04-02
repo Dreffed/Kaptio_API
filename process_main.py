@@ -64,9 +64,6 @@ def main():
 
     kt = KaptioClient(baseurl, kaptio_config['api']['auth']['key'], kaptio_config['api']['auth']['secret'])
 
-    pickle_file = get_configuration_path(config, 'pickle', PATHS)
-    data = get_pickle_data(pickle_file)
-    run_data['pickle'] = pickle_file
 
     function_switch = {
         'backup': backup_data,
@@ -86,48 +83,58 @@ def main():
         'xml': process_xml
     }
 
-    if logger.level == logging.DEBUG and len(data)> 0:
+    currencies = config.get("presets", {}).get("currencies", ["CAD"])
+    for currency in currencies:
+        config['presets']['currency'] = currency
+        pickle_file = get_configuration_path(config, 'pickle', PATHS)
+        name, ext = os.path.splitext(pickle_file)
+        pickle_file = os.path.join(name, currency, ext)
+        data = get_pickle_data(pickle_file)
+
+        if logger.level == logging.DEBUG and len(data)> 0:
+            logger.info("Data keys loaded...")
+            for key, value in data.items():
+                if value:
+                    logger.info("\t{} => {} : {}".format(key, type(value), len(value)))
+                else:
+                    logger.info("\t{} : No Values".format(key))
+        else:
+            logger.info('Clean data file...')
+
+        run_data['pickle'] = pickle_file
+
+        for process in config.get('process', []):
+            logger.info("Running: {}".format(process))
+            run_data['processes'].append(process)
+            #try:
+            if function_switch.get(process):
+                data = function_switch.get(process)(config, data, kt, savepath)
+            else:
+                logging.warning("no process defined for {}".format(process))
+            #except Exception as ex:
+            #    logger.error('=== ERROR: {} => {}\n\tSTOPPING!'.format(process, ex))
+            #    break
+
+        run_data['end'] = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+
+        if not data.get('_runs'):
+            data['_runs'] = {}
+
+        run_name = "{}-{}".format(run_data.get('hostname'), run_data.get('date'))
+        data['_runs'][run_name] = run_data
+
         logger.info("Data keys loaded...")
         for key, value in data.items():
             if value:
                 logger.info("\t{} => {} : {}".format(key, type(value), len(value)))
             else:
                 logger.info("\t{} : No Values".format(key))
-    else:
-        logger.info('Clean data file...')
 
-    for process in config.get('process', []):
-        logger.info("Running: {}".format(process))
-        run_data['processes'].append(process)
-        #try:
-        if function_switch.get(process):
-            data = function_switch.get(process)(config, data, kt, savepath)
-        else:
-            logging.warning("no process defined for {}".format(process))
-        #except Exception as ex:
-        #    logger.error('=== ERROR: {} => {}\n\tSTOPPING!'.format(process, ex))
-        #    break
-
-    run_data['end'] = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-
-    if not data.get('_runs'):
-        data['_runs'] = {}
-
-    run_name = "{}-{}".format(run_data.get('hostname'), run_data.get('date'))
-    data['_runs'][run_name] = run_data
-
-    logger.info("Data keys loaded...")
-    for key, value in data.items():
-        if value:
-            logger.info("\t{} => {} : {}".format(key, type(value), len(value)))
-        else:
-            logger.info("\t{} : No Values".format(key))
-
-    save_pickle_data(data, pickle_file)
-    try:
-        save_json("kt_api_data.json", data)
-    except Exception as ex:
-        logger.info("Failed to save JSON file.\n\t{}".format(ex))
+        save_pickle_data(data, pickle_file)
+        try:
+            save_json("kt_api_data.json", data)
+        except Exception as ex:
+            logger.info("Failed to save JSON file.\n\t{}".format(ex))
 
 if __name__ == '__main__':
     main()

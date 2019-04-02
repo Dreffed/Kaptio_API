@@ -66,7 +66,7 @@ def main():
 
 
     function_switch = {
-        'savedata': save_data,
+        'save_data': save_data,
         'backup': backup_data,
         'clear_data': clear_data,
         'partial': init_partial,

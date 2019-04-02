@@ -85,7 +85,8 @@ def process_xml(config, data, kt, savepath):
     content_fields = load_json(contentconfigpath)
 
     if not data.get('content'):
-        raise "not content loaded"
+        logger.error("No content has been loaded")
+        return data
     
     # pivot the content into a cleaner format....
     kt_pcontent = {}

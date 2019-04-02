@@ -91,9 +91,9 @@ def load_bulkloaderconfig(config_path):
     logger.info("Loaded bulkloader config data...")
     return config
 
-def generate_bulkloader(price_data, savepath, template, yearnumber, versionnumber, tax_profile, config):
+def generate_bulkloader(price_data, savepath, template, yearnumber, versionnumber, tax_profile, config, currency="CAD"):
     excel_feed_path = os.path.join(savepath, 'templates', template)
-    bulk_file_name = 'Rocky Bulk Loader.{}.{}.{}.xlsx'.format(tax_profile.replace(" ", ""), yearnumber, versionnumber)
+    bulk_file_name = 'Rocky Bulk Loader.{}.{}.{}.{}.xlsx'.format(tax_profile.replace(" ", ""), yearnumber, versionnumber, currency)
 
     row_idx = config['start_row']-1
 

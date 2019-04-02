@@ -51,6 +51,10 @@ def process_bulkloader(config, data, kt, savepath):
 
     config_path = os.path.join(savepath, 'config', 'all_sell.xl.config.json')
     rows = get_packagerows(data.get('packages', []))
+    file_version=config.get("presets", {}).get("version", "0.1")
+    currency=config.get("presets", {}).get("currency", "CAD")
+    season_date = config.get('season', {}).get('start')
+    season_year = season_date[:4]
 
     for t_key in data.get('tax_profiles', {}).keys():
         extract_data = get_pricedata(data, rows, t_key)
@@ -63,10 +67,11 @@ def process_bulkloader(config, data, kt, savepath):
                 price_data=extract_data.get('price_data', []), 
                 savepath=savepath, 
                 template='Rocky Bulk Cost Loader template.xlsx', 
-                yearnumber=2020, 
-                versionnumber='1.2',
+                yearnumber=season_year, 
+                versionnumber=file_version,
                 tax_profile=t_key,
-                config=xl_config
+                config=xl_config,
+                currency=currency
             )
 
     return data

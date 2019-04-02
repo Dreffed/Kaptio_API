@@ -12,7 +12,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_profile, savepath):
+def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_profile, savepath, currency="CAD"):
     xml_root = Element('RockyMountaineer')
     xml_products = SubElement(xml_root, 'products', bookingType=tax_profile, date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
@@ -159,6 +159,6 @@ def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_
 
     logger.info("{} exported".format(package_count))
 
-    xml_file = path.join(savepath, 'data', 'webdata-{}-formated.xml'.format(tax_profile.replace(' ', ''))) 
+    xml_file = path.join(savepath, 'data', 'webdata-{}-{}-formated.xml'.format(tax_profile.replace(' ', ''), currency)) 
     with codecs.open(xml_file, 'w', encoding='utf8') as fp:
         fp.write(prettify(xml_root))

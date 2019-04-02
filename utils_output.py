@@ -77,6 +77,9 @@ def process_xml(config, data, kt, savepath):
 
     #xmlconfigpath = "xml_fields.json"
     #xml_fields = load_json(xmlconfigpath)
+    currency=config.get("presets", {}).get("currency", "CAD")
+    season_date = config.get('season', {}).get('start')
+    season_year = season_date.left(4)
 
     contentconfigpath = "content_fields.json"
     content_fields = load_json(contentconfigpath)
@@ -102,16 +105,17 @@ def process_xml(config, data, kt, savepath):
     departure_types = [
             'Anyday', 'Seasonal', 'Fixed'
         ]   
-
-    generate_xml(
-            packages=data.get('packages', []),
-            pricelist=data.get('pricelist', {}), 
-            content=kt_pcontent,
-            departure_types=departure_types, 
-            yearnumber=2020, 
-            tax_profile='Zero Rated',
-            savepath=savepath
-        )
+    for t_key in data.get('tax_profiles', {}).keys():
+        generate_xml(
+                packages=data.get('packages', []),
+                pricelist=data.get('pricelist', {}), 
+                content=kt_pcontent,
+                departure_types=departure_types, 
+                yearnumber=season_year, 
+                tax_profile=t_key,
+                savepath=savepath,
+                currency=currency
+            )
 
     logger.info("Generated XML Files")
     return data

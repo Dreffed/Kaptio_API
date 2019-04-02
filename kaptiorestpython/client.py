@@ -25,6 +25,8 @@ class KaptioClient:
         assert(auth_secret is not None)
 
         self.logger = logging.getLogger(__name__)
+        self.logger.level = logging.DEBUG
+
         self.baseurl = baseurl
         self.auth_key = auth_key
         self.auth_secret = auth_secret

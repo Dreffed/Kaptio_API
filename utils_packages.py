@@ -77,6 +77,7 @@ def process_packages(kaptioclient, savepath, packages, tax_profiles, occupancy, 
                                     taxprofileid=taxprofileid,
                                     channelid=channelid,
                                     occupancy=occ_str,
+                                    currency=currency,
                                     debug=False
                                     )
                             try:

@@ -19,5 +19,5 @@ if logger.level == logging.INFO and len(data)> 0:
             logger.info("\t{} : No Values".format(key))
 else:
     logger.info('Clean data file...')
-print(data)
+
 save_json("{}.json".format(base_name), data)

@@ -3,7 +3,7 @@ import json
 import os
 import requests
 from datetime import datetime
-from kaptiorestpython.helper.http_lib import HttpLib
+from kaptiorestpython.helper.http_lib import HttpLib, _rate_limited
 from kaptiorestpython.helper.exceptions import APIException
 from utils import save_json
 from simple_salesforce import Salesforce
@@ -22,6 +22,7 @@ class KaptioOGraph:
     clientsecret = None
     access_token = None
     instance_url = None
+    num_calls_per_second = 5
 
     def __init__(self, baseurl, sfurl, username, password, security_token, sandbox, clientid, clientsecret):
         self.logger = logging.getLogger(__name__)
@@ -64,6 +65,7 @@ class KaptioOGraph:
         self.logger.info("Access Token: {}".format(self.access_token))
         self.logger.info("Instance URL: {}".format(self.instance_url))      
 
+    @_rate_limited(num_calls_per_second)
     def get_content(self, packageid):
         if self.access_token is None:
             self.get_token()

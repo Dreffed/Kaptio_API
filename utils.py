@@ -105,14 +105,14 @@ def copy_pickles(savepath):
                 logger.info("Copy to share: {} => {}".format(f['file'], newname))
                 shutil.copy(f['file'], dstpath)
 
-            data[f.get('file'), 'file'] = {
+            data[f.get('file', 'file')] = {
                 'src': f.get('file'),
                 'copy':newname,
                 'dest':dstpath
             }
         except Exception as ex:
             logger.error("Failed to copy file {} {}".format(f.get('file'), ex))
-
+    logger.info(data)
     return data
 
 def scan_packagefiles(savepath):

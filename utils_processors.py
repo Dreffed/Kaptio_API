@@ -87,6 +87,7 @@ def backup_data(config, data, kt, savepath):
         data = {}
     if not data.get('backup'):
         data['backup'] = {}
+        
     data['backup'] = {**data.get('backup',{}), **copy_pickles(savepath)}
 
     return data

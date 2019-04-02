@@ -64,7 +64,6 @@ def main():
 
     kt = KaptioClient(baseurl, kaptio_config['api']['auth']['key'], kaptio_config['api']['auth']['secret'])
 
-
     function_switch = {
         'save_data': save_data,
         'backup': backup_data,

@@ -22,18 +22,29 @@ if not os.path.exists(localpath):
     logger.info("Creating archive directory: {}".format(localpath))
     os.makedirs(localpath)
 
+datestamp = datetime.now()
 datapath = os.path.join(savepath, "data")
 filecount = 0
 for f in scanfiles(datapath, r".*\.json"):
     filecount += 1
     filedate = datetime.strptime(f['modified'], "%Y-%m-%d %H:%M:%S")
+    filepath = os.path.join(f.get('folder'), f.get('file'))
+    if (datestamp - filedate).total_seconds() > (8 * 60 * 60):
+        os.remove(filepath)
+        continue
+
     destfolder = os.path.join(localpath, filedate.strftime("%Y-%m-%d"))
     if not os.path.exists(destfolder):
         os.makedirs(destfolder)
-    filepath = os.path.join(f.get('folder'), f.get('file'))
     destfile = os.path.join(destfolder, f.get('file'))
     # copy the file over...
-    shutil.move(filepath, destfile)
+    try:
+        shutil.move(filepath, destfile)
+    except FileExistsError:
+        pass
+    except Exception as ex:
+        logger.error("{}".format(ex))
+
     if filecount % 1000 == 0:
         logger.info("...",)
 

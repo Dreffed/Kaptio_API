@@ -263,7 +263,7 @@ def augment_pricelists(config, data, kt, savepath):
                 i_data[d_key][t_key]["_id"] = t_value
                 for o_key, o_value in occupancy.items():
                     i_data[d_key][t_key][o_key] = {}
-                    i_data[d_key][t_key][o_Key]["_id"] = o_value
+                    i_data[d_key][t_key][o_key]["_id"] = o_value
                     for s_key, s_value in service_levels.items():
                         i_data[d_key][t_key][o_key][s_key] = {}
                         i_data[d_key][t_key][o_key][s_key]["_id"] = s_value

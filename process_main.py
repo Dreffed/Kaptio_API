@@ -106,8 +106,6 @@ def main():
                     logger.info("\t{} => {} : {}".format(key, type(value), len(value)))
                 else:
                     logger.info("\t{} : No Values".format(key))
-        else:
-            logger.info('Clean data file...')
 
         run_data['pickle'] = pickle_file
 

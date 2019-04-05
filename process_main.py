@@ -51,13 +51,15 @@ def main():
         "processes": []
     }
 
-    logger.info("Timestamp: {}".format(run_data.get('run_data',{}).get('date')))
+    logger.info("Timestamp: {}".format(run_data.get('date')))
 
     savepath = get_folderpath(config, '_remote', PATHS)
     logger.info('Savepath: {}'.format(savepath))
 
     config_type = config.get("configurations", {}).get("run", {}).get("kaptio")
     kaptio_config_file = get_configuration_path(config, config_type, config.get('paths', []))
+    logger.info("\tLoading config: {}".format(kaptio_config_file))
+
     kaptio_config = load_kaptioconfig(kaptio_config_file)    
     baseurl = kaptio_config['api']['baseurl']
     
@@ -99,15 +101,13 @@ def main():
         config['presets']['pickle'] = pickle_file
         data = get_pickle_data(pickle_file)
 
-        if logger.level == logging.DEBUG and len(data)> 0:
+        if len(data)> 0:
             logger.info("Data keys loaded...")
             for key, value in data.items():
                 if value:
                     logger.info("\t{} => {} : {}".format(key, type(value), len(value)))
                 else:
                     logger.info("\t{} : No Values".format(key))
-        else:
-            logger.info('Clean data file...')
 
         run_data['pickle'] = pickle_file
 

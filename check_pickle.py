@@ -7,7 +7,7 @@ from utils import get_pickle_data, save_pickle_data, save_json, load_json, scanf
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-base_name = "kt_api_data_USD"
+base_name = "kt_api_data_AUD"
 pickle_file = "{}.pickle".format(base_name)
 logging.info("using pickle: {}".format(pickle_file))
 data = get_pickle_data(pickle_file)

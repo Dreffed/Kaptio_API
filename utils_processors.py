@@ -2,6 +2,7 @@
 from kaptiorestpython.client import KaptioClient, load_kaptioconfig
 from kaptiorestpython.ograph import KaptioOGraph
 from utils import get_pickle_data, save_pickle_data, save_json, scanfiles, copy_pickles
+from utils_config import get_folderpath, load_config, get_configuration_path
 import json
 import pickle
 import os
@@ -26,24 +27,9 @@ def load_metadata(config, data, kt, savepath):
         if config.get('switches', {}).get('errors'):
             logger.info('=== ERROR: {} => {}'.format(json.dumps(data, indent=2), ex))
 
-    occupancy = {
-        "single":"1=1,0",
-        "double":"1=2,0",
-        "triple":"1=3,0",
-        "quad":"1=4,0"
-    }
-
-    child_occupancy = {
-        "double_child":"1=1,1",
-        "triple_1child":"1=2,1",
-        "triple_2child":"1=1,2",
-        "quad_1child":"1=3,1",
-        "quad_2child":"1=2,2",
-        "quad_3child":"1=1,3"
-    }
-
-    data['occupancy'] = occupancy
-    data['occupancy_child'] = child_occupancy
+    data['season'] = config.get("season", {})
+    data['occupancy'] = config.get("occupancy", {})
+    data['occupancy_child'] = config.get("child_occupancy", {}) 
 
     tax_profiles = {
         "Zero Rated":"a8H4F0000003tsfUAA",
@@ -51,11 +37,6 @@ def load_metadata(config, data, kt, savepath):
         "Domestic":"a8H4F0000003tnfUAA"
     }
     data['tax_profiles'] = tax_profiles
-
-    data['season'] = {
-        'start': '2020-04-01',
-        'end': '2020-10-31'
-    }
 
     logger.info("loaded metadata")
     for key, value in data.items():
@@ -235,6 +216,71 @@ def process_prices(config, data, kt, savepath):
 
     return data
 
+def augment_pricelists(config, data, kt, savepath):
+    if not data:
+        data = {}
+    prices = {}
+
+    # occupancy, tax profiles, service_levels
+    occupancy = data.get('occupancy', {})
+    currency=config.get("presets", {}).get("currency", "CAD")
+    
+    use_profiles = data.get('tax_profiles', {})
+    tax_profiles = {}
+    for tp in config.get("presets", {}).get("tax_profiles"):
+        if tp in use_profiles:
+            tax_profiles[tp] = use_profiles.get(tp)
+
+    # scan the data and load in other records...
+    for p_value in data.get('packages', []):
+        p_key = p_value.get("id")
+        p_list = data.get("pricelist", {}).get(p_key, {}).get("pricelist")
+        if p_list:
+            p_value['pricelist'] = p_list
+
+        i_data = {}
+
+        dates = []
+        for d in p_value.get('dates', []):
+            dates.append(d)
+
+        if len(dates) == 0:
+            for d in p_value.get('package_departures', []):
+                if d.get('active'):
+                    dates.append(d.get('date'))
+
+        service_levels = {}
+        for s_item in p_value.get('service_levels',[]):
+            sid = s_item.get('id')
+            sname = s_item.get('name')
+            if s_item.get('active'):
+                service_levels[sid] = {'name': sname, 'active': s_item.get('active')}        
+
+        for d_key in dates:
+            i_data[d_key] = {}
+            for t_key, t_value in tax_profiles.items():
+                i_data[d_key][t_key] = {}
+                i_data[d_key][t_key]["_id"] = t_value
+                for o_key, o_value in occupancy.items():
+                    i_data[d_key][t_key][o_key] = {}
+                    i_data[d_key][t_key][o_Key]["_id"] = o_value
+                    for s_key, s_value in service_levels.items():
+                        i_data[d_key][t_key][o_key][s_key] = {}
+                        i_data[d_key][t_key][o_key][s_key]["_id"] = s_value
+                        for c_key in currency:
+                            i_data[d_key][t_key][o_key][s_key][c_key] = {}
+                            i_data[d_key][t_key][o_key][s_key][c_key]['date'] = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                            for price_item in p_list.get(d_key, {}).get(t_key, {}).get(o_key, []):
+                                if price_item.get('service_level_id') == s_value:
+                                    i_data[d_key][t_key][o_key][s_key][c_key]['total_price'] = price_item.get('total_price')
+                                    if len(price_item.get('errors',[]) > 0):
+                                        i_data[d_key][t_key][o_key][s_key][c_key]['errors'] = price_item.get('errors')
+
+        prices[p_key] = {**prices[p_key], **i_data}
+
+    data['prices'] = prices
+    return data
+
 def process_content(config, data, kt, savepath):
     if not data:
         data = {}
@@ -263,10 +309,9 @@ def process_items(config, data, kt, savepath):
     return data
 
 def get_ograph(config, savepath):
-    kaptio_config_file = os.path.join(savepath, "config", "kaptio_settings.json")
+    kaptio_config_file = get_configuration_path(config, 'kaptio', config.get('paths', []))
     kaptio_config = load_kaptioconfig(kaptio_config_file)    
     
-    debug = True
     baseurl = kaptio_config['ograph']['baseurl']
     sfurl = kaptio_config['sf']['url']
     username = kaptio_config['sf']['username']
@@ -280,5 +325,9 @@ def get_ograph(config, savepath):
     return kt
 
 def get_ktapi(config, savepath):
+    kaptio_config_file = get_configuration_path(config, 'kaptio', config.get('paths', []))
+    kaptio_config = load_kaptioconfig(kaptio_config_file)    
+    baseurl = kaptio_config['api']['baseurl']
+
     kt = KaptioClient(baseurl, kaptio_config['api']['auth']['key'], kaptio_config['api']['auth']['secret'])
     return kt

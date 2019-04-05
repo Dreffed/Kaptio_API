@@ -10,7 +10,7 @@ from utils_processors import (
         save_data, backup_data, load_metadata, init_partial, 
         promote_custom, process_dates, process_prices, 
         process_packages, clear_data, process_content,
-        process_items
+        process_items, augment_pricelists
     )
 from utils_parallel import process_price_parallel
 from utils_output import (
@@ -40,6 +40,7 @@ def main():
         logging.config.dictConfig(config.get('logger', {}))
     except:
         logging.basicConfig(level=logging.INFO)
+    config["paths"] = PATHS
 
     run_data = {
         "homepath": PATHS.get('HOME', os.path.expanduser("~")),
@@ -76,6 +77,7 @@ def main():
         'dates': process_dates,
         'prices': process_prices,
         'price_para': process_price_parallel,
+        'augment_price': augment_pricelists,
         'errors': process_errors,
         'content': process_content,
         'items': process_items,

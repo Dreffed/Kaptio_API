@@ -266,18 +266,23 @@ def augment_pricelists(config, data, kt, savepath):
                     i_data[d_key][t_key][o_key]["_id"] = o_value
                     for s_key, s_value in service_levels.items():
                         i_data[d_key][t_key][o_key][s_key] = {}
-                        i_data[d_key][t_key][o_key][s_key]["_id"] = s_value
-                        for c_key in currency:
-                            i_data[d_key][t_key][o_key][s_key][c_key] = {}
-                            i_data[d_key][t_key][o_key][s_key][c_key]['date'] = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                        i_data[d_key][t_key][o_key][s_key]["_data"] = s_value
+
+                        # save for the current currency....
+                        i_data[d_key][t_key][o_key][s_key][currency] = {}
+                        i_data[d_key][t_key][o_key][s_key][currency]['date'] = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                        if p_list:
                             for price_item in p_list.get(d_key, {}).get(t_key, {}).get(o_key, []):
-                                if price_item.get('service_level_id') == s_value:
-                                    i_data[d_key][t_key][o_key][s_key][c_key]['total_price'] = price_item.get('total_price')
-                                    if len(price_item.get('errors',[]) > 0):
-                                        i_data[d_key][t_key][o_key][s_key][c_key]['errors'] = price_item.get('errors')
+                                if price_item.get('service_level_id') == s_key:
+                                    i_data[d_key][t_key][o_key][s_key][currency]['total_price'] = price_item.get('total_price')
+                                    if len(price_item.get('errors',[])) > 0:
+                                        i_data[d_key][t_key][o_key][s_key][currency]['errors'] = price_item.get('errors')
 
-        prices[p_key] = {**prices[p_key], **i_data}
-
+        if prices.get(p_key):
+            prices[p_key] = {**prices[p_key], **i_data}
+        else:
+            prices[p_key] = i_data
+            
     data['prices'] = prices
     return data
 
@@ -309,7 +314,8 @@ def process_items(config, data, kt, savepath):
     return data
 
 def get_ograph(config, savepath):
-    kaptio_config_file = get_configuration_path(config, 'kaptio', config.get('paths', []))
+    config_type = config.get("configurations", {}).get("run", {}).get("kaptio")
+    kaptio_config_file = get_configuration_path(config, config_type, config.get('paths', []))
     kaptio_config = load_kaptioconfig(kaptio_config_file)    
     
     baseurl = kaptio_config['ograph']['baseurl']
@@ -325,7 +331,8 @@ def get_ograph(config, savepath):
     return kt
 
 def get_ktapi(config, savepath):
-    kaptio_config_file = get_configuration_path(config, 'kaptio', config.get('paths', []))
+    config_type = config.get("configurations", {}).get("run", {}).get("kaptio")
+    kaptio_config_file = get_configuration_path(config, config_type, config.get('paths', []))
     kaptio_config = load_kaptioconfig(kaptio_config_file)    
     baseurl = kaptio_config['api']['baseurl']
 

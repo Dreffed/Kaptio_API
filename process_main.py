@@ -10,7 +10,7 @@ from utils_processors import (
         save_data, backup_data, load_metadata, init_partial, 
         promote_custom, process_dates, process_prices, 
         process_packages, clear_data, process_content,
-        process_items, augment_pricelists
+        process_items, augment_pricelists, get_ktapi, get_ograph
     )
 from utils_parallel import process_price_parallel
 from utils_output import (
@@ -56,10 +56,9 @@ def main():
     savepath = get_folderpath(config, '_remote', PATHS)
     logger.info('Savepath: {}'.format(savepath))
 
-    kaptio_config_file = get_configuration_path(config, 'kaptio', PATHS)
-    logger.info('KT Config: {}'.format(kaptio_config_file))
-    kaptio_config = load_kaptioconfig(kaptio_config_file)
-
+    config_type = config.get("configurations", {}).get("run", {}).get("kaptio")
+    kaptio_config_file = get_configuration_path(config, config_type, config.get('paths', []))
+    kaptio_config = load_kaptioconfig(kaptio_config_file)    
     baseurl = kaptio_config['api']['baseurl']
     
     run_data['baseurl'] = baseurl
@@ -89,7 +88,8 @@ def main():
     currencies = config.get("presets", {}).get("currencies", ["CAD"])
     for currency in currencies:
         config['presets']['currency'] = currency
-        pickle_file = get_configuration_path(config, 'pickle', PATHS)
+        config_type = config.get("configurations", {}).get("run", {}).get("pickle")
+        pickle_file = get_configuration_path(config, config_type, PATHS)
         name, ext = os.path.splitext(pickle_file)
         pickle_file = "{}_{}{}".format(name,currency, ext)
         logger.info("Loading pickle file {}".format(pickle_file))

@@ -12,7 +12,8 @@ def recover_json(config, paths):
     currencies = config.get("presets", {}).get("currencies", ["CAD"])
     for currency in currencies:
         config['presets']['currency'] = currency
-        pickle_file = get_configuration_path(config, 'pickle', paths)
+        config_type = config.get("configurations", {}).get("run", {}).get("pickle")
+        pickle_file = get_configuration_path(config, config_type, paths)
         name, ext = os.path.splitext(pickle_file)
         json_file = "{}_{}{}".format(name,currency, ".json")
         pickle_file = "{}_{}{}".format(name,currency, ext)

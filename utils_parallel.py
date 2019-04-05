@@ -67,9 +67,10 @@ def process_price_parallel(config, data, kt, savepath):
     reload = config.get('flags', {}).get('switches', {}).get('reload')
     currency=config.get("presets", {}).get("currency", "CAD")
     try:
-        max_threads = int(config.get("presets", {}).get("threads", 3))
+        max_threads = int(config.get("presets", {}).get("threads", 5))
     except:
-        max_threads = 3
+        max_threads = 5
+
     for p_value in data.get(package_field, []):
         #logger.info("p_value: {}".format(p_value))
         if p_value.get(key_field, []):
@@ -128,7 +129,7 @@ def process_price_parallel(config, data, kt, savepath):
                 data['pricelist'][packageid] = {}
                     
             data['pricelist'][packageid]['pricelist'] = run_data.get('pricelist')
-
+            
         except Empty:
             break
 

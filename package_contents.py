@@ -32,7 +32,7 @@ clientsecret = kaptio_config['ograph']['clientsecret']
 
 kt = KaptioOGraph(baseurl, sfurl, username, password, security_token, sandbox, clientid, clientsecret)
 
-pickle_file = "kaptio_allsell.pickle"
+pickle_file = "kt_api_data_CAD.pickle"
 data = get_pickle_data(pickle_file)
 
 logger.info("Available items:")
@@ -45,7 +45,10 @@ logger.info("Timestamp: {}".format(timestamp))
 
 kt_packages = data['packages']
 for key, value in data.items():
-    print("\t{} -> {}:{}".format(key, type(value), len(value)))
+    if value:
+        print("\t{} -> {}:{}".format(key, type(value), len(value)))
+    else:
+        print("\t{} -> {}:{}".format(key, "NONE", 0))
 
 kt_content = {}
 if 'content' in data:

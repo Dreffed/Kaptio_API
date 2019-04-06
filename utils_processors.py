@@ -24,8 +24,7 @@ def load_metadata(config, data, kt, savepath):
         data['client'] = kt.get_client(savepath)
 
     except Exception as ex:
-        if config.get('switches', {}).get('errors'):
-            logger.info('=== ERROR: {} => {}'.format(json.dumps(data, indent=2), ex))
+        logger.error('{} => {}'.format(json.dumps(data, indent=2), ex))
 
     data['season'] = config.get("season", {})
     data['occupancy'] = config.get("occupancy", {})

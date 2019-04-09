@@ -17,7 +17,7 @@ datapaths = ["OneDrive - Great Canadian Railtour Co", "Jupyter_NB"]
 savepath = os.path.join(homepath, *datapaths)
 logger.info(savepath)
 
-kaptio_config_file = os.path.join(savepath, "config", "kaptio_settings.json")
+kaptio_config_file = "kaptio_settings.json"
 kaptio_config = load_kaptioconfig(kaptio_config_file)
 
 debug = True
@@ -26,11 +26,13 @@ sfurl = kaptio_config['sf']['url']
 username = kaptio_config['sf']['username']
 password = kaptio_config['sf']['passwd']
 security_token = kaptio_config['sf']['token']
-sandbox = True
+sandbox = False
 clientid = kaptio_config['ograph']['clientid']
 clientsecret = kaptio_config['ograph']['clientsecret']
 
 kt = KaptioOGraph(baseurl, sfurl, username, password, security_token, sandbox, clientid, clientsecret)
+if kt:
+    logger.info("connected to SFDC")
 
 pickle_file = "kt_api_data_CAD.pickle"
 data = get_pickle_data(pickle_file)

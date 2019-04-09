@@ -24,7 +24,7 @@ class KaptioOGraph:
     instance_url = None
     num_calls_per_second = 5
 
-    def __init__(self, baseurl, sfurl, username, password, security_token, sandbox, clientid, clientsecret):
+    def __init__(self, baseurl, sfurl, username, password, security_token, sandbox, clientid, clientsecret, use_sandbox=True):
         self.logger = logging.getLogger(__name__)
         assert(baseurl is not None)
         assert(sfurl is not None)
@@ -46,9 +46,11 @@ class KaptioOGraph:
         self.sandbox = sandbox
         self.clientid = clientid
         self.clientsecret = clientsecret
+        self.use_sandbox = use_sandbox
 
     def connect_sf(self):
-        sf = Salesforce(username=self.username, password=self.password, security_token=self.security_token, sandbox=True)
+        sf = Salesforce(username=self.username, password=self.password, security_token=self.security_token, sandbox=self.use_sandbox)
+        self.logger.info("connected to SFDC {}".format(self.sfurl))
         return sf
 
     def get_token(self):
@@ -60,6 +62,7 @@ class KaptioOGraph:
             "password": "{}{}".format(self.password, self.security_token)
         }
         r = requests.post("{}/services/oauth2/token".format(self.sfurl), params=params)
+        self.logger.info(r.json())
         self.access_token = r.json().get("access_token")
         self.instance_url = r.json().get("instance_url")
         self.logger.info("Access Token: {}".format(self.access_token))
@@ -69,7 +72,10 @@ class KaptioOGraph:
     def get_content(self, packageid):
         if self.access_token is None:
             self.get_token()
-            
+        
+        if self.access_token is None:
+            raise Exception("Unable to connect to SFDC {} => {}".format(self.sfurl, self.baseurl))
+
         content_url = r"{}/services/apexrest/kaptio/packagecontent/{}".format(self.baseurl, packageid)
         content_hdr = {
             'Content-type': 'application/json',

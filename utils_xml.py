@@ -159,6 +159,6 @@ def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_
 
     logger.info("{} exported".format(package_count))
 
-    xml_file = path.join(savepath, 'data', 'webdata-{}-{}-formated.xml'.format(tax_profile.replace(' ', ''), currency)) 
+    xml_file = path.join(savepath, 'output', 'webdata-{}-{}-formated.xml'.format(tax_profile.replace(' ', ''), currency)) 
     with codecs.open(xml_file, 'w', encoding='utf8') as fp:
         fp.write(prettify(xml_root))

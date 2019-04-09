@@ -36,6 +36,7 @@ class ThreadWorker(Thread):
                 services = p.get('services')
                 dates = p.get('dates')
                 currency = p.get('currency', 'CAD')
+                channelid = p.get("channelid")
 
                 data = self.kt.walk_package(
                         savepath=self.savepath, 
@@ -44,7 +45,8 @@ class ThreadWorker(Thread):
                         tax_profiles=tax_profiles, 
                         occupancy=occupancy, 
                         services=services,
-                        currency=currency
+                        currency=currency,
+                        channelid=channelid
                     )
                 p['pricelist'] = data
                 self.result_queue.put(p)
@@ -70,6 +72,19 @@ def process_price_parallel(config, data, kt, savepath):
         max_threads = int(config.get("presets", {}).get("threads", 5))
     except:
         max_threads = 5
+
+    channelid=None
+    for c in data.get("channels",[]):
+        if c.get("id") == config.get("presets", {}).get("channelid") or \
+                c.get("name") == config.get("presets", {}).get("channelname") or \
+                c.get("code") == config.get("presets", {}).get("channelcode"):
+            logger.info("Matched channeldata {} => {}".format(c.get("name"), c.get("id")))
+            channelid = c.get("id")
+            break
+        
+    if not channelid:
+        logger.error("Failed to match channelid {}".config.get("presets", {}).get("channelid") )
+        raise Exception("Failed to match channelid {}".config.get("presets", {}).get("channelid"))
 
     for p_value in data.get(package_field, []):
         #logger.info("p_value: {}".format(p_value))
@@ -99,7 +114,8 @@ def process_price_parallel(config, data, kt, savepath):
             "tax_profiles": data.get('tax_profiles', {}),
             "occupancy": data.get('occupancy', {}),
             "services": p_value.get('service_levels' ,{}),
-            "currency": currency
+            "currency": currency,
+            "channelid": channelid
         }
 
         job_queue.put(run_data)

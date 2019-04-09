@@ -29,13 +29,7 @@ def load_metadata(config, data, kt, savepath):
     data['season'] = config.get("season", {})
     data['occupancy'] = config.get("occupancy", {})
     data['occupancy_child'] = config.get("child_occupancy", {}) 
-
-    tax_profiles = {
-        "Zero Rated":"a8H4F0000003tsfUAA",
-        "Foreign":"a8H4F0000003uJbUAI",
-        "Domestic":"a8H4F0000003tnfUAA"
-    }
-    data['tax_profiles'] = tax_profiles
+    data['tax_profiles'] = config.get("tax_profiles", {})
 
     logger.info("loaded metadata")
     for key, value in data.items():
@@ -164,7 +158,19 @@ def process_prices(config, data, kt, savepath):
 
     reload = config.get('flags', {}).get('switches', {}).get('reload')
 
-    channelid=config.get("presets", {}).get("channelid")
+    channelid=None
+    for c in data.get("channels",[]):
+        if c.get("id") == config.get("presets", {}).get("channelid") or \
+                c.get("name") == config.get("presets", {}).get("channelname") or \
+                c.get("code") == config.get("presets", {}).get("channelcode"):
+            logger.info("Matched channeldata {} => {}".format(c.get("name"), c.get("id")))
+            channelid = c.get("id")
+            break
+        
+    if not channelid:
+        logger.error("Failed to match channelid {}".config.get("presets", {}).get("channelid") )
+        raise Exception("Failed to match channelid {}".config.get("presets", {}).get("channelid"))
+        
     currency=config.get("presets", {}).get("currency", "CAD")
     
     use_profiles = data.get('tax_profiles', {})

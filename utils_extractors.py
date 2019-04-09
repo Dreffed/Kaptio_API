@@ -238,11 +238,12 @@ def get_farebase(pricelist, tax_profile, packageid, service_level_id):
 
     fareBasis = {}
     fareDates = set()
-
+    error_count = 0
+    entry_count = 0
     for d_key, d_value in pricelist.items():
         if d_key == "errors":
             continue
-
+        entry_count += 1
         if d_value[tax_profile]:
             if not isinstance(d_value.get(tax_profile), dict):
                 continue
@@ -254,13 +255,16 @@ def get_farebase(pricelist, tax_profile, packageid, service_level_id):
                 for p_item in o_value:
                     if p_item.get('service_level_id') == service_level_id:
                         if len(p_item.get('errors', [])) > 0:
-                            logger.error("Error in prices\n\t{} => [{}] {}:{} {}".format(packageid, d_key, tax_profile, o_key, service_level_id))
+                            error_count += 1
                             continue
 
                         if p_item.get('total_price'):
                             if not d_key in fareBasis[o_key]:
                                 fareBasis[o_key][d_key] = p_item.get('total_price').copy()
 
+
+    logger.info("\tEntries: {}\n\tErrors: {}".format(entry_count, error_count))
+        
     data = {}
     for f_key, f_value in fareBasis.items():
         data[f_key] = {}

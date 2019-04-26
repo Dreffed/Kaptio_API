@@ -11,6 +11,73 @@ import multiprocessing
 from multiprocessing.queues import Empty
 import logging.config
 
+class KaptioSearch:
+    '''This is a search class that will generate the search terms, and 
+    used to pass in the parameteres to the  underlying functions'''
+    search_values = dict()
+    req_terms = [
+        'tax_profile_id',
+        'channel_id',
+        'currency,'
+        'occupancy'
+    ]
+    option_terms = [
+        'service_level_ids',
+        'date_from',
+        'date_to',
+        'mode'
+    ]
+    filter_terms = [
+        'id',
+        'length',
+        'category',
+        'start_location',
+        'end_location',
+        'record_type_name'
+    ]
+
+    def __init__(self, search_values):
+        '''
+        Pass in a dict of terms, Kaptio require the following:
+            tax_profile_id
+            channel_id
+            currency
+            occupancy
+
+        They also accept the following:
+            service_level_ids
+            date_from
+            date_to
+            mode
+
+        And they have a filter which is a weird list format
+            filter
+        '''
+        self.search_values = search_values
+
+    def updatecreate_term(self, term, value):
+        ''' Adds a terms to the search_values dict
+        '''
+        self.search_values[term] = value
+
+    def add_filter(self, term, operator, value):
+        ''' Uses the filter terms to add in a value to the filter part
+        '''
+        pass
+
+    def build_query(self):
+        ''' This will return an empty string is no terms,
+        other wise it'll build out the string
+        '''
+        search_list = []
+        for key, value in self.search_values.items():
+            if len(value) > 0:
+                search_list.append("{}={}".format(key, value))
+
+        if len(search_list) > 0:
+            return "?{}".format("&".join(search_list))   
+        return ""
+
 class KaptioClient:
     # franken code for client calls...
     
@@ -407,19 +474,9 @@ class KaptioClient:
             except:
                 pass
 
-        return {'data':data, 'errors':errors}
+        return {'data':data, 'errors':err}
 
     def walk_package(self, savepath, packageid, dates, tax_profiles, occupancy, services, channelid="a6H4F0000000DkbUAE", currency="CAD"):
-        """
-        if not isinstance(dates, list):
-            raise "[dates] should be a list of date strings 'YYYY-mm-dd'"
-        if not isinstance(tax_profiles, dict):
-            raise "[tax_profiles] should be a dict{'tax profile name':'SFId'}"
-        if not isinstance(occupancy, dict):
-            raise "[occupancy] should be a dict{'occupancy name':'filter string'}"
-        if not isinstance(services, dict):
-            raise "[services] should be a list of dict{'name':'name', 'id':'SFId', 'active':bool}"
-        """
         c_count = 0
         # pivot the services to get the name from id:
         service_dict = {}

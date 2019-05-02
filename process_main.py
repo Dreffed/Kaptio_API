@@ -7,7 +7,7 @@ from utils import (
 from utils_dict import extract_rows
 from utils_config import get_folderpath, load_config, get_configuration_path
 from utils_processors import (
-        save_data, backup_data, load_metadata, init_partial, 
+        save_data, backup_data, load_metadata, init_partial, update_taxprofiles,
         promote_custom, process_dates, process_prices, 
         process_packages, clear_data, process_content,
         process_items, augment_pricelists, get_ktapi, get_ograph
@@ -73,6 +73,7 @@ def main():
         'clear_data': clear_data,
         'partial': init_partial,
         'metadata': load_metadata,
+        'tax_profiles': update_taxprofiles,
         'packages': process_packages,
         'custom': promote_custom,
         'dates': process_dates,

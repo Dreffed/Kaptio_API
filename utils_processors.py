@@ -40,6 +40,24 @@ def load_metadata(config, data, kt, savepath):
 
     return data
 
+def update_taxprofiles(config, data, kt, savepath):
+    q = "SELECT ID, sfxId__c, Name, currencyIsoCode FROM KaptioTravel__TaxProfile__c"
+
+    kt = get_ograph(config, savepath)
+    resp = kt.process_query(q)
+
+    data['tax_profiles'] = config.get("tax_profiles", {})
+    for r in resp.get('records', []):
+        for t_key, t_value in config.get("tax_profiles", {}):
+            t_name_new = r.get('Name')
+            t_key_new = r.get('Id')
+            if t_name_new.lower().startswith(t_key.lower()):
+                if t_key_new != t_value:
+                    logger.info("Updating tax profile id: {}: {} => {}".format(t_key, t_value, r.get('Id')))
+                    data['tax_profiles'][t_key] = r.get('Id')
+
+    return data
+
 def clear_data(config, data, kt, savepath):
     if not data:
         data = {}

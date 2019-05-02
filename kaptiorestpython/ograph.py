@@ -69,6 +69,30 @@ class KaptioOGraph:
         self.logger.info("Instance URL: {}".format(self.instance_url))      
 
     @_rate_limited(num_calls_per_second)
+    def process_query(self, query):
+        if self.access_token is None:
+            self.get_token()
+        
+        if self.access_token is None:
+            raise Exception("Unable to connect to SFDC {} => {}".format(self.sfurl, self.baseurl))
+    
+        content_url = r"{}/services/data/v44.0/query/?q={}".format(self.baseurl, query)
+        content_hdr = {
+            'Content-type': 'application/json',
+            'Accept-Encoding': 'gzip',
+            "Authorization": "Bearer {}".format(self.access_token),
+            "cache-control": "no-cache"
+        }
+        json_data = {}
+        r = requests.get(content_url, headers=content_hdr)
+        if r.status_code == 200:
+            json_data = json.loads(r.text)
+        else:
+            json_data['Error'] = r
+            self.logger.info("Failed: {} => {}".format(r, r.text)) 
+        return json_data
+
+    @_rate_limited(num_calls_per_second)
     def get_content(self, packageid):
         if self.access_token is None:
             self.get_token()

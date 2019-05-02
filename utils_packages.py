@@ -20,6 +20,15 @@ def process_packages(kaptioclient, savepath, packages, tax_profiles, occupancy, 
     kt_1040 = []
     kt_1020 = []
     new_prices = []
+    search_values = {
+        'tax_profile_id': None,
+        'channel_id': channelid,
+        'currency': currency,
+        'occupancy': None,
+        'service_level_ids': None,
+        'date_from': None,
+        'date_to': None
+    }
 
     for p_value in packages:
         packageid = p_value.get('id')
@@ -69,19 +78,23 @@ def process_packages(kaptioclient, savepath, packages, tax_profiles, occupancy, 
                             if e_code == 1040:
                                 kt_1040.append(log_item)
                                 continue
+
+                            # update search_values
+                            search_values['tax_profile_id'] = taxprofileid
+                            search_values['occupancy'] = occ_str
+                            search_values['service_level_ids'] = p_item.get('service_level_id')
+                            search_values['date_from'] = d_key
+                            search_values['date_to'] = d_key
+                            search_values['filter'] ='id=={}'.format(packageid)
+                            
                             # we can try to get a new value from the API...
                             new_info = kaptioclient.get_packageprice(
                                     savepath=savepath, 
-                                    packageid=packageid, 
-                                    date_from=d_key, date_to=d_key,
-                                    taxprofileid=taxprofileid,
-                                    channelid=channelid,
-                                    occupancy=occ_str,
-                                    currency=currency,
-                                    debug=False
+                                    packageid=packageid,
+                                    search_values=search_values
                                     )
-                            try:
 
+                            try:
                                 for item in new_info.get('data', []):
                                     if len(item.get('errors')) == 0:
                                         # we need to get the adv serach the get the items here...

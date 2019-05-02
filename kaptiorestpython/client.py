@@ -15,19 +15,19 @@ class KaptioSearch:
     '''This is a search class that will generate the search terms, and 
     used to pass in the parameteres to the  underlying functions'''
     search_values = dict()
-    req_terms = [
+    _req_terms = [
         'tax_profile_id',
         'channel_id',
-        'currency,'
+        'currency',
         'occupancy'
     ]
-    option_terms = [
+    _option_terms = [
         'service_level_ids',
         'date_from',
         'date_to',
         'mode'
     ]
-    filter_terms = [
+    _filter_terms = [
         'id',
         'length',
         'category',
@@ -54,6 +54,24 @@ class KaptioSearch:
             filter
         '''
         self.search_values = search_values
+
+    def req_terms(self):
+        terms = dict()
+        for item in self._req_terms:
+            terms[item] = None
+        return terms
+
+    def options_terms(self):
+        terms = dict()
+        for item in self._option_terms:
+            terms[item] = None
+        return terms
+
+    def filter_terms(self):
+        terms = dict()
+        for item in self._filter_terms:
+            terms[item] = None
+        return terms
 
     def updatecreate_term(self, term, value):
         ''' Adds a terms to the search_values dict
@@ -86,6 +104,8 @@ class KaptioClient:
     auth_secret = None
     headers = None
     num_calls_per_second = 5
+    max_retries = 3
+    sleep_duration = 3
 
     def __init__(self, baseurl, auth_key, auth_secret):
         assert(baseurl is not None)
@@ -104,40 +124,63 @@ class KaptioClient:
     def api_data(self, url_data, paramstr ="", querystr = "", body = None):
         thisurl = 'http://{}/{}/{}{}{}'.format(self.baseurl, url_data['version'], url_data['suburl'], paramstr, querystr)
         self.logger.debug("{}:{}\n\t{}". format(url_data["name"], url_data['method'], thisurl))
-        try:
-            if url_data['method'] == "GET":
-                r = requests.get(thisurl, headers=self.headers)
-            elif url_data['method'] == "POST":
-                r = requests.post(thisurl, headers=self.headers, json=body)
+
+        retries = 1
+        while True:
+            if retries > self.max_retries:
+                return None
+
+            try:
+                if url_data['method'] == "GET":
+                    r = requests.get(thisurl, headers=self.headers)
+                elif url_data['method'] == "POST":
+                    r = requests.post(thisurl, headers=self.headers, json=body)
                 
-            return r
-        except:
-            return None
+                # check and handle Kaptio errors in these calls...    
+                
+                return r
+            except:
+                self.logger.error("HTTP Exception! Retrying.....")
+                sleep(self.sleep_duration)
+                retries += 1
 
     @_rate_limited(num_calls_per_second)
     def api_list(self, url_data, paramstr, querystr, body = None):
         thisurl = 'http://{}/{}/{}{}{}'.format(self.baseurl, url_data['version'], url_data['suburl'], paramstr, querystr)
         self.logger.debug("{}:{}\n\t{}". format(url_data["name"], url_data['method'], thisurl))
+
         data = []
+        retries = 1
         while True:
-            if url_data['method'] == "GET":
-                r = requests.get(thisurl, headers=self.headers)
-            elif url_data['method'] == "POST":
-                r = requests.post(thisurl, headers=self.headers, json=body)
+            if retries > self.max_retries:
+                return None
+
+            try:
+                if url_data['method'] == "GET":
+                    r = requests.get(thisurl, headers=self.headers)
+                elif url_data['method'] == "POST":
+                    r = requests.post(thisurl, headers=self.headers, json=body)
+                
+                if r.status_code != 200:
+                    self.logger.error("HTTP Exception! Retrying.....")
+                    self.logger.info('ERROR: {} => {}'.format(r, r.text))
+                    sleep(self.sleep_duration)
+                    retries += 1
+                    continue
             
-            if r.status_code != 200:
-                self.logger.info('ERROR: {} => {}'.format(r, r.text))
-                break
-            
-            json_data = json.loads(r.text)
-            self.logger.debug('====')
-            #display_fields(json_data)
-            data.extend(json_data['records'])
-            
-            if json_data['next']:
-                thisurl = json_data['next']
-            else:
-                break
+                json_data = json.loads(r.text)
+                self.logger.debug('====')
+                #display_fields(json_data)
+                data.extend(json_data['records'])
+                
+                if json_data['next']:
+                    thisurl = json_data['next']
+                else:
+                    break
+            except:
+                self.logger.error("HTTP Exception! Retrying.....")
+                sleep(self.sleep_duration)
+                retries += 1
 
         return data
 
@@ -411,13 +454,10 @@ class KaptioClient:
                 pass
         return rd
 
-    def get_packageprice(self, savepath, packageid, date_from, date_to, 
-                        taxprofileid = 'a8H4F0000003tsfUAA', channelid = 'a6H4F0000000DkMUAU', 
-                        occupancy = '1=1,0', services = 'a7r4F0000000AloQAE', currency="CAD"):
+    def get_packageprice(self, savepath, packageid, search_values):
         data = []
         errors = []
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    
     
         url_data = {}
         url_data['name'] = "Package Search"
@@ -426,18 +466,6 @@ class KaptioClient:
         url_data['method'] = 'GET'
         paramstr = ''
         
-        search_values = {
-            "tax_profile_id":taxprofileid,  # Required    #Zero
-            "channel_id":channelid,         # Required    # travel agent
-            "currency":currency,               # Required
-            "occupancy":occupancy,          # Required
-            "service_level_ids":services,   
-            "date_from":date_from,
-            "date_to":date_to,
-            "mode":"",
-            "filter":"id=={}".format(packageid)
-        }
-
         search_list = []
         for key, value in search_values.items():
             if len(value) > 0:
@@ -451,7 +479,7 @@ class KaptioClient:
             rd = self.get_responsedata(r)
         else:
             self.logger.info("Failed: {} => {}".format(r, r.text)) 
-            return data
+            return {'data':data, 'errors':errors}
 
         for p in rd['results']:
             for d in p['prices_by_service_level']:
@@ -474,7 +502,51 @@ class KaptioClient:
             except:
                 pass
 
-        return {'data':data, 'errors':err}
+        return {'data':data, 'errors':errors}
+
+    def process_package_prices(self, savepath, packageid, dates, tax_profiles, occupancy, services, channelid="a6H4F0000000DkbUAE", currency="CAD"):
+        # sort the dates list
+        dates.sort()
+
+        search_values = {
+            'tax_profile_id': None,
+            'channel_id': channelid,
+            'currency': currency,
+            'occupancy': None,
+            'service_level_ids': None,
+            'date_from': dates[0],
+            'date_to': dates[-1],
+            'filter': 'id=={}'.format(packageid),
+            'mode': 'all'
+        }
+
+        data = {}
+        c_count = 0
+
+        for s in services:
+            s_key = s.get('id')
+            search_values['service_level_ids'] = s_key
+            for t_key, t_value in tax_profiles.items():
+                for o_key, o_value in occupancy.items():
+                    search_values['tax_profile_id'] = t_value
+                    search_values['occupancy'] = o_value
+
+                    # get the data...
+                    pricelist = self.get_packageprice(savepath, packageid, search_values)
+                    for p in pricelist.get('prices_by_service_level', []):
+                        d_key = p.get('date')
+                        if not d_key in data:
+                            data[d_key] =  {}
+                        if not t_key in data[d_key]:
+                            data[d_key][t_key] = {}
+                        if not o_key in data[d_key][t_key]:
+                            data[d_key][t_key][o_key] = []
+
+                        c_count += 1
+                        data[d_key][t_key][o_key].append(p)
+
+        self.logger.info("\t{} => {}".format(packageid, c_count))
+        return data
 
     def walk_package(self, savepath, packageid, dates, tax_profiles, occupancy, services, channelid="a6H4F0000000DkbUAE", currency="CAD"):
         c_count = 0
@@ -486,16 +558,31 @@ class KaptioClient:
                 service_list.append(s['id'])
                 service_dict[s['id']] = s
         services_str = ",".join(service_list)
-        
+
+        # packageid, date_from=d, date_to=d, taxprofileid=t_value, occupancy=o_value, services=services_str, channelid=channelid, currency=currency   
+        search_values = {
+            'tax_profile_id': None,
+            'channel_id': channelid,
+            'currency': currency,
+            'occupancy': None,
+            'service_level_ids': services_str,
+            'date_from': None,
+            'date_to': None,
+            'filter': 'id=={}'.format(packageid)
+        }
+
         data = {}
         for d in dates:
             data[d] = {}
             for t_key, t_value in tax_profiles.items():
                 data[d][t_key] = {}
                 for o_key, o_value in occupancy.items():
-                    pricelist = self.get_packageprice(savepath, packageid, date_from=d, date_to=d, 
-                                                taxprofileid=t_value, occupancy=o_value,
-                                                services=services_str, channelid=channelid, currency=currency)
+                    search_values['tax_profile_id'] = t_value
+                    search_values['occupancy'] = o_value
+                    search_values['date_from'] = d
+                    search_values['date_to'] = d
+
+                    pricelist = self.get_packageprice(savepath, packageid, search_values)
                     data[d][t_key][o_key] = []
                     try:
                         if len(pricelist['data']) > 0:
@@ -511,6 +598,7 @@ class KaptioClient:
                             data['errors'] = 0
                         data['errors'] += 1
                         data[d][t_key][o_key] = [{"errors" : [{"room_index": 0, "error": {"code": 500, "message": "Internal Server Error 500", "details": ""}}]}]
+        
         self.logger.info("\t{} => {}".format(packageid, c_count))
         return data
 

@@ -38,7 +38,7 @@ class ThreadWorker(Thread):
                 currency = p.get('currency', 'CAD')
                 channelid = p.get("channelid")
 
-                data = self.kt.walk_package(
+                data = self.kt.process_package_prices(
                         savepath=self.savepath, 
                         packageid=packageid, 
                         dates=dates, 
@@ -83,8 +83,8 @@ def process_price_parallel(config, data, kt, savepath):
             break
         
     if not channelid:
-        logger.error("Failed to match channelid {}".config.get("presets", {}).get("channelid") )
-        raise Exception("Failed to match channelid {}".config.get("presets", {}).get("channelid"))
+        logger.error("Failed to match channelid {}".format(config.get("presets", {}).get("channelid")))
+        raise Exception("Failed to match channelid {}".format(config.get("presets", {}).get("channelid")))
 
     for p_value in data.get(package_field, []):
         #logger.info("p_value: {}".format(p_value))

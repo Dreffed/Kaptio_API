@@ -168,8 +168,8 @@ def process_prices(config, data, kt, savepath):
             break
         
     if not channelid:
-        logger.error("Failed to match channelid {}".config.get("presets", {}).get("channelid") )
-        raise Exception("Failed to match channelid {}".config.get("presets", {}).get("channelid"))
+        logger.error("Failed to match channelid {}".format(config.get("presets", {}).get("channelid") ))
+        raise Exception("Failed to match channelid {}".format(config.get("presets", {}).get("channelid")))
         
     currency=config.get("presets", {}).get("currency", "CAD")
     
@@ -202,7 +202,7 @@ def process_prices(config, data, kt, savepath):
         services = p_value.get('service_levels' ,{})        
 
         logger.info("\told {} pricelist".format(len(p_value.get(key_field, []))))
-        run_data = kt.walk_package(
+        run_data = kt.process_package_prices(
             savepath=savepath, 
             packageid=p_key, 
             dates=dates, 

@@ -45,10 +45,11 @@ def update_taxprofiles(config, data, kt, savepath):
 
     kt = get_ograph(config, savepath)
     resp = kt.process_query(q)
+    logger.info(resp)
 
     data['tax_profiles'] = config.get("tax_profiles", {})
     for r in resp.get('records', []):
-        for t_key, t_value in config.get("tax_profiles", {}):
+        for t_key, t_value in config.get("tax_profiles", {}).items():
             t_name_new = r.get('Name')
             t_key_new = r.get('Id')
             if t_name_new.lower().startswith(t_key.lower()):

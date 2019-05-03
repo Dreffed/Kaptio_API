@@ -501,7 +501,7 @@ class KaptioClient:
                     json.dump(json_msg, f, indent=4)
             except:
                 pass
-
+        #self.logger.info("===\n{}\n===\n{}".format(data, errors))
         return {'data':data, 'errors':errors}
 
     def process_package_prices(self, savepath, packageid, dates, tax_profiles, occupancy, services, channelid="a6H4F0000000DkbUAE", currency="CAD"):
@@ -533,7 +533,7 @@ class KaptioClient:
 
                     # get the data...
                     pricelist = self.get_packageprice(savepath, packageid, search_values)
-                    for p in pricelist.get('prices_by_service_level', []):
+                    for p in pricelist.get('data', []):
                         d_key = p.get('date')
                         if not d_key in data:
                             data[d_key] =  {}
@@ -581,6 +581,7 @@ class KaptioClient:
                     search_values['occupancy'] = o_value
                     search_values['date_from'] = d
                     search_values['date_to'] = d
+                    self.logger.info("Search: {}".format(search_values))
 
                     pricelist = self.get_packageprice(savepath, packageid, search_values)
                     data[d][t_key][o_key] = []

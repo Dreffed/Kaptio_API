@@ -2,6 +2,7 @@ from time import time
 import json
 import os
 import requests
+from urllib.parse import quote
 from datetime import datetime
 from kaptiorestpython.helper.http_lib import HttpLib, _rate_limited
 from kaptiorestpython.helper.exceptions import APIException
@@ -76,20 +77,22 @@ class KaptioOGraph:
         if self.access_token is None:
             raise Exception("Unable to connect to SFDC {} => {}".format(self.sfurl, self.baseurl))
     
-        content_url = r"{}/services/data/v44.0/query/?q={}".format(self.baseurl, query)
+        content_url = r"{}/services/data/v44.0/query/?q={}".format(self.sfurl, quote(query))
         content_hdr = {
             'Content-type': 'application/json',
             'Accept-Encoding': 'gzip',
             "Authorization": "Bearer {}".format(self.access_token),
             "cache-control": "no-cache"
         }
+
         json_data = {}
         r = requests.get(content_url, headers=content_hdr)
+
         if r.status_code == 200:
-            json_data = json.loads(r.text)
+            json_data = r.json()
         else:
             json_data['Error'] = r
-            self.logger.info("Failed: {} => {}".format(r, r.text)) 
+            self.logger.error("Failed: {} => {}".format(r, r.text)) 
         return json_data
 
     @_rate_limited(num_calls_per_second)

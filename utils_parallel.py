@@ -48,6 +48,9 @@ class ThreadWorker(Thread):
                         currency=currency,
                         channelid=channelid
                     )
+
+                #self.logger.info(data)
+                
                 p['pricelist'] = data
                 self.result_queue.put(p)
 
@@ -85,7 +88,9 @@ def process_price_parallel(config, data, kt, savepath):
     if not channelid:
         logger.error("Failed to match channelid {}".format(config.get("presets", {}).get("channelid")))
         raise Exception("Failed to match channelid {}".format(config.get("presets", {}).get("channelid")))
-
+    
+    limit_run = int(config.get("presets", {}).get("limit_run",0))
+    added = 0
     for p_value in data.get(package_field, []):
         #logger.info("p_value: {}".format(p_value))
         if p_value.get(key_field, []):
@@ -119,7 +124,12 @@ def process_price_parallel(config, data, kt, savepath):
         }
 
         job_queue.put(run_data)
-
+        if limit_run > 0:
+            added += 1
+            if added > limit_run:
+                logger.info("Run limit hit: {}".format(limit_run))
+                break
+            
     for _ in range(max_threads):
         worker = ThreadWorker(kt, job_queue, result_queue, savepath)
         # Setting daemon to True will let the main thread exit even though the workers are blocking

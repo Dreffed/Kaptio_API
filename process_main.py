@@ -17,6 +17,7 @@ from utils_output import (
         process_allsell, process_bulkloader, 
         process_errors, process_xml
     )
+from utils_pickle import export_pickle
 import json
 import pickle
 import os
@@ -70,6 +71,7 @@ def main():
     function_switch = {
         'save_data': save_data,
         'backup': backup_data,
+        'export': export_pickle,
         'clear_data': clear_data,
         'partial': init_partial,
         'metadata': load_metadata,

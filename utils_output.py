@@ -2,7 +2,7 @@
 from kaptiorestpython.client import KaptioClient, load_kaptioconfig
 from utils import save_json, load_json, scanfiles
 from utils_packages import process_packages
-from utils_extractors import get_packagerows, get_pricedata
+from utils_extractors import get_packagerows, get_bulkloader_pricedata
 from utils_excel import generate_bulkloader, load_WB, load_bulkloaderconfig
 from utils_dict import extract_rows
 from utils_xml import generate_xml
@@ -57,7 +57,7 @@ def process_bulkloader(config, data, kt, savepath):
     season_year = season_date[:4]
 
     for t_key in data.get('tax_profiles', {}).keys():
-        extract_data = get_pricedata(data, rows, t_key)
+        extract_data = get_bulkloader_pricedata(data, rows, t_key)
         data['errors'] = extract_data.get('errors')
         data['price_data'] = extract_data.get('price_data')
 

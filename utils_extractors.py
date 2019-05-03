@@ -31,7 +31,136 @@ def get_packagerows(packages):
     logger.info("Found {} packages".format(len(rows)))
     return rows
 
-def get_pricedata(data, rows, tax_profile):
+def get_allsell_pricedata(data, rows, tax_profile):
+    error_list = []
+    price_data = []
+    for row in rows:
+        packageid = row.get('packageid')
+        if packageid in data.get('pricelist', {}):
+            p_data = data.get('pricelist', {}).get(packageid)
+            if not p_data:
+                logger.error("Missing price data for {}".format(packageid))
+                continue
+
+            service_levels = {}
+            if 'service_levels' in p_data:
+                for item in p_data['service_levels']:
+                    sid = item.get('id')
+                    sname = item.get('name')
+                    sactive = item.get('active')
+                    if not sid in service_levels:
+                        service_levels[sid] = {'name': sname, 'active': sactive}
+
+            if 'pricelist' in p_data:
+                for d_key, d_value in p_data['pricelist'].items():
+                    if d_key == 'errors':
+                        continue
+
+                    # process the date
+                    date_str = d_key
+                    p_date = datetime.strptime(date_str, "%Y-%m-%d")
+                    dow = p_date.strftime('%a')
+                    try:
+                        e_date = p_date + timedelta(days= row.get('packagelength'))
+                    except:
+                        e_date = p_date
+
+                    b = {}
+                    b['packageid'] = row.get('packageid')
+                    b['packagename'] = row.get('packagename')
+                    b['packagedeptype'] = row.get('packagedeptype')
+                    b['depdate'] = p_date
+                    b['arrdate'] = e_date
+                    b['mon'] = ('Y' if dow =='Mon' else '')
+                    b['tue'] = ('Y' if dow =='Tue' else '')
+                    b['wed'] = ('Y' if dow =='Wed' else '')
+                    b['thu'] = ('Y' if dow =='Thu' else '')
+                    b['fri'] = ('Y' if dow =='Fri' else '')
+                    b['sat'] = ('Y' if dow =='Sat' else '')
+                    b['sun'] = ('Y' if dow =='Sun' else '')
+
+                    for t_key, t_value in d_value.items():
+                        if t_key != tax_profile:
+                            continue
+                        o_data  = {}
+                        for o_key, o_value in t_value.items():
+                            # now we are in the array of service types...
+                            
+                            o_data[o_key] = []
+
+                            for item in o_value:
+                                try:
+                                    if len(item['errors']) == 0:
+
+                                        if 'total_price' in item:
+                                            t = item.get('total_price')
+                                            r = {}
+                                            r['service_level_id'] = item.get('service_level_id')
+                                            r['service_level'] = service_levels.get(item.get('service_level_id'))
+                                            r['tax_profile'] = t_key
+                                            r["net"] = t.get('net')
+                                            r['sales'] = t.get('sales')
+                                            r['net_discount'] = t.get('net_discount')
+                                            r['sales_discount'] = t.get('sales_discount')
+                                            r['tax'] = t.get('tax')
+                                            r['currency'] = t.get('currency')
+                                            r['supplier_price'] = t.get('supplier_price')
+                                            r = {**r}
+                                            o_data[o_key].append(r)
+                                    else:
+                                        for err in item['errors']:
+                                            r_err = {}
+                                            r_err['packageid'] = row.get('packageid')
+                                            r_err['packagename'] = row.get('packagename')
+                                            r_err['packagedeptype'] = row.get('packagedeptype')
+                                            r_err['depdate'] = d_key
+                                            r_err['tax_profile'] = t_key
+                                            r_err['service_level_id'] = item.get('service_level_id')
+                                            r_err['service_level'] = service_levels.get(item.get('service_level_id'))
+                                            r_err['code'] = err.get('error', {}).get('code')
+                                            r_err['message'] = err.get('error', {}).get('message')
+                                            r_err['details'] = err.get('error', {}).get('details')
+                                            error_list.append(r_err)
+                                except Exception as ex:
+                                    logger.error('Error: {}'.format(ex))
+                                    logger.error(json.dumps(row, indent=4))
+                                    logger.error(json.dumps(o_value, indent=4))
+                        # pivot the occupancy data...
+                        # we should have a dict with key of occupancy key and a row for each service level...
+                        for s_key, s_value in service_levels.items():
+                            s = {}
+                            s['service_level_id'] = s_key
+                            s['service_level'] = s_value.get('name')
+                            for o_key, o_value in o_data.items():
+                                for item in o_value:
+                                    if item['service_level_id'] == s_key:
+                                        # we want this data...
+                                        s_prefix = 'xx'
+                                        if o_key == 'single':
+                                            s_prefix = 'sa'
+                                        elif o_key == 'double':
+                                            s_prefix = 'da'
+                                        elif o_key == 'triple':
+                                            s_prefix = 'ta'
+                                        elif o_key == 'quad':
+                                            s_prefix = 'qa'
+
+                                        s['{}sales'.format(s_prefix)] = item.get('sales')
+                                        s['{}net'.format(s_prefix)] = item.get('net')
+                                        s['{}tax'.format(s_prefix)] = item.get('tax')
+                                        s['{}currency'.format(s_prefix)] = item.get('currency')
+                                        s['tax_profile'] = item.get('tax_profile')
+                            r = {**b, **s}
+                            price_data.append(r)
+
+    logger.info("Rows: {} => Errors: {}".format(len(price_data), len(error_list)))
+    
+    return {
+        "price_data": price_data,
+        "errors": error_list
+    }
+
+def get_bulkloader_pricedata(data, rows, tax_profile):
     error_list = []
     price_data = []
     for row in rows:

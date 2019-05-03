@@ -63,7 +63,6 @@ class KaptioOGraph:
             "password": "{}{}".format(self.password, self.security_token)
         }
         r = requests.post("{}/services/oauth2/token".format(self.sfurl), params=params)
-        self.logger.info(r.json())
         self.access_token = r.json().get("access_token")
         self.instance_url = r.json().get("instance_url")
         self.logger.info("Access Token: {}".format(self.access_token))

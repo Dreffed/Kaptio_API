@@ -3,6 +3,7 @@ import pickle
 import os
 import path
 import json
+from decimal import Decimal
 from time import time
 from datetime import datetime, timedelta
 import logging
@@ -31,9 +32,26 @@ def get_packagerows(packages):
     logger.info("Found {} packages".format(len(rows)))
     return rows
 
-def get_allsell_pricedata(data, rows, tax_profile):
+def get_pricedata(data, rows, tax_profile):
+    factor_lookup = {
+        "single":1.0,
+        "double":2.0,
+        "triple":3.0,
+        "quad":4.0
+    }
+
     error_list = []
     price_data = []
+
+    service_levels = {}
+    if 'service_levels' in data:
+        for item in data.get('service_levels',[]):
+            sid = item.get('id')
+            sname = item.get('name')
+            sactive = item.get('active')
+            if not sid in service_levels:
+                service_levels[sid] = {'name': sname, 'active': sactive}
+
     for row in rows:
         packageid = row.get('packageid')
         if packageid in data.get('pricelist', {}):
@@ -41,15 +59,6 @@ def get_allsell_pricedata(data, rows, tax_profile):
             if not p_data:
                 logger.error("Missing price data for {}".format(packageid))
                 continue
-
-            service_levels = {}
-            if 'service_levels' in p_data:
-                for item in p_data['service_levels']:
-                    sid = item.get('id')
-                    sname = item.get('name')
-                    sactive = item.get('active')
-                    if not sid in service_levels:
-                        service_levels[sid] = {'name': sname, 'active': sactive}
 
             if 'pricelist' in p_data:
                 for d_key, d_value in p_data['pricelist'].items():
@@ -85,7 +94,7 @@ def get_allsell_pricedata(data, rows, tax_profile):
                         o_data  = {}
                         for o_key, o_value in t_value.items():
                             # now we are in the array of service types...
-                            
+                            factor = factor_lookup.get(o_key,1)
                             o_data[o_key] = []
 
                             for item in o_value:
@@ -99,7 +108,13 @@ def get_allsell_pricedata(data, rows, tax_profile):
                                             r['service_level'] = service_levels.get(item.get('service_level_id'))
                                             r['tax_profile'] = t_key
                                             r["net"] = t.get('net')
-                                            r['sales'] = t.get('sales')
+                                            try:
+                                                r['sales'] = float(t.get('sales'))
+                                                r['person'] = float(r['sales']) / factor
+                                            except:
+                                                r['sales'] = t.get('sales')
+                                                r['person'] = 0.00
+
                                             r['net_discount'] = t.get('net_discount')
                                             r['sales_discount'] = t.get('sales_discount')
                                             r['tax'] = t.get('tax')
@@ -161,6 +176,22 @@ def get_allsell_pricedata(data, rows, tax_profile):
     }
 
 def get_bulkloader_pricedata(data, rows, tax_profile):
+    factor_lookup = {
+        "single":1.0,
+        "double":2.0,
+        "triple":3.0,
+        "quad":4.0
+    }
+
+    service_levels = {}
+    if 'service_levels' in data:
+        for item in data.get('service_levels',[]):
+            sid = item.get('id')
+            sname = item.get('name')
+            sactive = item.get('active')
+            if not sid in service_levels:
+                service_levels[sid] = {'name': sname, 'active': sactive}
+    
     error_list = []
     price_data = []
     for row in rows:
@@ -170,15 +201,6 @@ def get_bulkloader_pricedata(data, rows, tax_profile):
             if not p_data:
                 logger.error("Missing price data for {}".format(packageid))
                 continue
-
-            service_levels = {}
-            if 'service_levels' in p_data:
-                for item in p_data['service_levels']:
-                    sid = item.get('id')
-                    sname = item.get('name')
-                    sactive = item.get('active')
-                    if not sid in service_levels:
-                        service_levels[sid] = {'name': sname, 'active': sactive}
 
             if 'pricelist' in p_data:
                 for d_key, d_value in p_data['pricelist'].items():
@@ -214,7 +236,7 @@ def get_bulkloader_pricedata(data, rows, tax_profile):
                         o_data  = {}
                         for o_key, o_value in t_value.items():
                             # now we are in the array of service types...
-                            
+                            factor = factor_lookup.get(o_key,1)                            
                             o_data[o_key] = []
 
                             for item in o_value:
@@ -228,7 +250,13 @@ def get_bulkloader_pricedata(data, rows, tax_profile):
                                             r['service_level'] = service_levels.get(item.get('service_level_id'))
                                             r['tax_profile'] = t_key
                                             r["net"] = t.get('net')
-                                            r['sales'] = t.get('sales')
+                                            try:
+                                                r['sales'] = float(t.get('sales'))
+                                                r['person'] = float(r['sales']) / factor
+                                            except:
+                                                r['sales'] = t.get('sales')
+                                                r['person'] = 0.00
+
                                             r['net_discount'] = t.get('net_discount')
                                             r['sales_discount'] = t.get('sales_discount')
                                             r['tax'] = t.get('tax')
@@ -275,9 +303,11 @@ def get_bulkloader_pricedata(data, rows, tax_profile):
                                             s_prefix = 'qa'
 
                                         s['{}sales'.format(s_prefix)] = item.get('sales')
+                                        s['{}unit'.format(s_prefix)] = item.get('person')
                                         s['{}net'.format(s_prefix)] = item.get('net')
                                         s['{}tax'.format(s_prefix)] = item.get('tax')
                                         s['{}currency'.format(s_prefix)] = item.get('currency')
+
                                         s['tax_profile'] = item.get('tax_profile')
                             r = {**b, **s}
                             price_data.append(r)

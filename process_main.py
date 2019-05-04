@@ -14,7 +14,7 @@ from utils_processors import (
     )
 from utils_parallel import process_price_parallel
 from utils_output import (
-        process_allsell, process_bulkloader, 
+        process_allsell, process_pricedata, process_bulkloader, 
         process_errors, process_xml
     )
 from utils_pickle import export_pickle
@@ -85,7 +85,7 @@ def main():
         'errors': process_errors,
         'content': process_content,
         'items': process_items,
-        'allsell': process_allsell,
+        'allsell': process_pricedata,
         'bulkloader': process_bulkloader,
         'xml': process_xml
     }

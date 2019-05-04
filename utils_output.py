@@ -2,7 +2,7 @@
 from kaptiorestpython.client import KaptioClient, load_kaptioconfig
 from utils import save_json, load_json, scanfiles
 from utils_packages import process_packages
-from utils_extractors import get_packagerows, get_bulkloader_pricedata
+from utils_extractors import get_packagerows, get_bulkloader_pricedata, get_pricedata
 from utils_excel import generate_bulkloader, load_WB, load_bulkloaderconfig
 from utils_dict import extract_rows
 from utils_xml import generate_xml
@@ -12,6 +12,7 @@ import os
 import path
 from time import time
 from datetime import datetime
+import csv
 import logging
 
 logger = logging.getLogger(__name__)
@@ -45,6 +46,40 @@ def process_allsell(config, data, kt, savepath):
 
     return data
 
+def process_pricedata(config, data, kt, savepath):
+    if not data:
+        data = {}
+
+    rows = get_packagerows(data.get('packages', []))
+    file_version=config.get("presets", {}).get("version", "0.1")
+    currency=config.get("presets", {}).get("currency", "CAD")
+    season_date = config.get('season', {}).get('start')
+    season_year = season_date[:4]
+    
+    for t_key in data.get('tax_profiles', {}).keys():
+        extract_data = get_pricedata(data, rows, t_key)
+        if not 'errors' in data:
+            data['errors'] = {}
+        if not 'price_data' in data:
+            data['price_data'] = {}
+
+        data['errors'][t_key] = extract_data.get('errors')
+        data['price_data'][t_key] = extract_data.get('price_data')
+
+        file_name = "allsell_{}_{}_{}.{}.csv".format(season_year, currency, t_key, file_version)
+
+        price_rows = data['price_data'][t_key]
+        if len(price_rows) > 0:
+            fieldnames = data['price_data'][t_key][0].keys()
+            logger.info('Saveing Data : {}'.format(file_name))
+            
+            with open(file_name, 'w', newline='') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(price_rows)
+
+    return data
+
 def process_bulkloader(config, data, kt, savepath):
     if not data:
         data = {}
@@ -58,13 +93,18 @@ def process_bulkloader(config, data, kt, savepath):
 
     for t_key in data.get('tax_profiles', {}).keys():
         extract_data = get_bulkloader_pricedata(data, rows, t_key)
-        data['errors'] = extract_data.get('errors')
-        data['price_data'] = extract_data.get('price_data')
+        if not 'errors' in data:
+            data['errors'] = {}
+        if not 'price_data' in data:
+            data['price_data'] = {}
+
+        data['errors'][t_key] = extract_data.get('errors')
+        data['price_data'][t_key] = extract_data.get('price_data')
 
         xl_config = load_bulkloaderconfig(config_path)
 
         generate_bulkloader(
-                price_data=extract_data.get('price_data', []), 
+                price_data=extract_data.get('price_data', {}).get(t_key,[]), 
                 savepath=savepath, 
                 template='Rocky Bulk Cost Loader template.xlsx', 
                 yearnumber=season_year, 

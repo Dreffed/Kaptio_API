@@ -8,3 +8,5 @@ tmp_*.py
 *.xlsx
 *.zip
 *.log
+*.7z
+*.config

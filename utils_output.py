@@ -57,14 +57,15 @@ def process_pricedata(config, data, kt, savepath):
     season_year = season_date[:4]
     
     for t_key in data.get('tax_profiles', {}).keys():
-        extract_data = get_pricedata(data, rows, t_key)
-        if not 'errors' in data:
-            data['errors'] = {}
-        if not 'price_data' in data:
-            data['price_data'] = {}
+        if not data.get('price_data',{}).get(t_key):
+            extract_data = get_pricedata(data, rows, t_key)
+            if not 'errors' in data:
+                data['errors'] = {}
+            if not 'price_data' in data:
+                data['price_data'] = {}
 
-        data['errors'][t_key] = extract_data.get('errors')
-        data['price_data'][t_key] = extract_data.get('price_data')
+            data['errors'][t_key] = extract_data.get('errors')
+            data['price_data'][t_key] = extract_data.get('price_data')
 
         file_name = "allsell_{}_{}_{}.{}.csv".format(season_year, currency, t_key, file_version)
 
@@ -92,19 +93,20 @@ def process_bulkloader(config, data, kt, savepath):
     season_year = season_date[:4]
 
     for t_key in data.get('tax_profiles', {}).keys():
-        extract_data = get_bulkloader_pricedata(data, rows, t_key)
-        if not 'errors' in data:
-            data['errors'] = {}
-        if not 'price_data' in data:
-            data['price_data'] = {}
+        if not data.get('price_data',{}).get(t_key):
+            extract_data = get_bulkloader_pricedata(data, rows, t_key)
+            if not 'errors' in data:
+                data['errors'] = {}
+            if not 'price_data' in data:
+                data['price_data'] = {}
 
-        data['errors'][t_key] = extract_data.get('errors')
-        data['price_data'][t_key] = extract_data.get('price_data')
+            data['errors'][t_key] = extract_data.get('errors')
+            data['price_data'][t_key] = extract_data.get('price_data')
 
         xl_config = load_bulkloaderconfig(config_path)
 
         generate_bulkloader(
-                price_data=extract_data.get('price_data', {}).get(t_key,[]), 
+                price_data=data.get('price_data', {}).get(t_key,[]), 
                 savepath=savepath, 
                 template='Rocky Bulk Cost Loader template.xlsx', 
                 yearnumber=season_year, 

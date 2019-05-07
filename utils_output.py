@@ -40,12 +40,6 @@ def process_errors(config, data, kt, savepath):
     data['updates'] = kt_updates
     return data
 
-def process_allsell(config, data, kt, savepath):
-    if not data:
-        data = {}
-
-    return data
-
 def remove_pricedata(config, data, kt, savepath):
     if not data:
         data = {}

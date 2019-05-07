@@ -21,6 +21,9 @@ def get_packagerows(packages):
         row['packagename'] = p.get('name')
         row['packagelength'] = p.get('length')
         row['packagedeptype'] = p.get('departure_type_id')
+        row['packagecode'] = p.get('product_code')
+        if not p.get('product_code'):
+            row['packagecode'] = p.get('custom_fields',{}).get('product_code')
 
         row['packagestart'] = 'missing'
         if 'start_location' in p:
@@ -78,8 +81,12 @@ def get_pricedata(data, rows, tax_profile):
                     b['packageid'] = row.get('packageid')
                     b['packagename'] = row.get('packagename')
                     b['packagedeptype'] = row.get('packagedeptype')
+                    b['packagecode'] = row.get('packagecode')
+                    b['packagestart'] = row.get('packagestart')
+
                     b['depdate'] = p_date
                     b['arrdate'] = e_date
+
                     b['mon'] = ('Y' if dow =='Mon' else '')
                     b['tue'] = ('Y' if dow =='Tue' else '')
                     b['wed'] = ('Y' if dow =='Wed' else '')
@@ -110,10 +117,10 @@ def get_pricedata(data, rows, tax_profile):
                                             r["net"] = t.get('net')
                                             try:
                                                 r['sales'] = float(t.get('sales'))
-                                                r['person'] = float(r['sales']) / factor
+                                                r['unitprice'] = float(r['sales']) / factor
                                             except:
                                                 r['sales'] = t.get('sales')
-                                                r['person'] = 0.00
+                                                r['unitprice'] = r['sales']
 
                                             r['net_discount'] = t.get('net_discount')
                                             r['sales_discount'] = t.get('sales_discount')
@@ -164,6 +171,8 @@ def get_pricedata(data, rows, tax_profile):
                                         s['{}net'.format(s_prefix)] = item.get('net')
                                         s['{}tax'.format(s_prefix)] = item.get('tax')
                                         s['{}currency'.format(s_prefix)] = item.get('currency')
+                                        s['{}unitprice'.format(s_prefix)] = item.get('unitprice')
+
                                         s['tax_profile'] = item.get('tax_profile')
                             r = {**b, **s}
                             price_data.append(r)
@@ -220,8 +229,12 @@ def get_bulkloader_pricedata(data, rows, tax_profile):
                     b['packageid'] = row.get('packageid')
                     b['packagename'] = row.get('packagename')
                     b['packagedeptype'] = row.get('packagedeptype')
+                    b['packagecode'] = row.get('packagecode')
+                    b['packagestart'] = row.get('packagestart')
+
                     b['depdate'] = p_date
                     b['arrdate'] = e_date
+
                     b['mon'] = ('Y' if dow =='Mon' else '')
                     b['tue'] = ('Y' if dow =='Tue' else '')
                     b['wed'] = ('Y' if dow =='Wed' else '')
@@ -252,10 +265,10 @@ def get_bulkloader_pricedata(data, rows, tax_profile):
                                             r["net"] = t.get('net')
                                             try:
                                                 r['sales'] = float(t.get('sales'))
-                                                r['person'] = float(r['sales']) / factor
+                                                r['unitprice'] = float(r['sales']) / factor
                                             except:
                                                 r['sales'] = t.get('sales')
-                                                r['person'] = 0.00
+                                                r['unitprice'] = r['sales']
 
                                             r['net_discount'] = t.get('net_discount')
                                             r['sales_discount'] = t.get('sales_discount')
@@ -306,6 +319,7 @@ def get_bulkloader_pricedata(data, rows, tax_profile):
                                         s['{}unit'.format(s_prefix)] = item.get('person')
                                         s['{}net'.format(s_prefix)] = item.get('net')
                                         s['{}tax'.format(s_prefix)] = item.get('tax')
+                                        s['{}unitprice'.format(s_prefix)] = item.get('unitprice')
                                         s['{}currency'.format(s_prefix)] = item.get('currency')
 
                                         s['tax_profile'] = item.get('tax_profile')

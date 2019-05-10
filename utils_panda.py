@@ -30,6 +30,8 @@ def pivot_pricedata(config, data, kt, savepath):
     print(df_package.head())
     df_package.to_csv('packagenames_tmp.csv', header=True)
 
+    
+
 
 if __name__ == '__main__':
     from utils import get_pickle_data

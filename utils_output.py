@@ -114,7 +114,7 @@ def process_bulkloader(config, data, kt, savepath):
         generate_bulkloader(
                 price_data=data.get('price_data', {}).get(t_key,[]), 
                 savepath=savepath, 
-                template='Rocky Bulk Cost Loader template.xlsx', 
+                template=None, 
                 yearnumber=season_year, 
                 versionnumber=file_version,
                 tax_profile=t_key,

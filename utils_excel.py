@@ -13,10 +13,19 @@ import logging
 logger = logging.getLogger(__name__)
 
 def num(s):
+    if isinstance(s, float): 
+        return s
+    if isinstance(s, int):
+        return s
+
     try:
+        if '.' in s:
+            return float(s)
         return int(s)
     except ValueError:
         return float(s)
+    except:
+        return 0
 
 def load_WB(path):    
     # process each sheet...
@@ -111,6 +120,9 @@ def get_field(field, row):
             return row[key]
 
 def generate_bulkloader(price_data, savepath, template, yearnumber, versionnumber, tax_profile, config, currency="CAD"):
+    if template is None:
+        template = config.get('template')
+
     excel_feed_path = os.path.join(savepath, 'templates', template)
     bulk_file_name = 'RM Bulk Loader.{}.{}.{}.{}.xlsx'.format(tax_profile.replace(" ", ""), yearnumber, versionnumber, currency)
 
@@ -151,15 +163,17 @@ def generate_bulkloader(price_data, savepath, template, yearnumber, versionnumbe
         ws = wb['Sheet1']
         wb.remove_sheet(ws)
     
-    short = 30
     for row in price_data:
         row_idx += 1 
-        row['comm'] = 0.2
+        #if row_idx > 30:
+        #    break
 
         for s in config.get('sheets',{}):
             ws = wb[s.get('name')]
+            logger.debug("using sheet: {}".format(ws.title))
 
             for field in s.get('fieldmap',[]):
+                logger.debug("\tfields: {}".format(field))
                 coord = '{}{}'.format(field['column'], row_idx)
                 # format the field..
                 key_name = 'fill'
@@ -198,7 +212,9 @@ def generate_bulkloader(price_data, savepath, template, yearnumber, versionnumbe
                     fn = Expression(field.get('equation'))
                     t = {}
                     for f in fn:
-                        t[f] = num(row.get(f,0))
+                        logger.debug("\t\t{}: [{}|{}]".format(f, row.get(f), s.get('parameters',{}).get(f)))
+                        t[f] = num(row.get(f,s.get('parameters',{}).get(f)))
+                    logger.debug("params: {}".format(t))
                     ws[coord].value = fn(**t)
                             
                 elif 'formula' in field:

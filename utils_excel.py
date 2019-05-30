@@ -119,7 +119,7 @@ def get_field(field, row):
         else:    
             return row[key]
 
-def generate_bulkloader(price_data, savepath, template, yearnumber, versionnumber, tax_profile, config, currency="CAD"):
+def generate_bulkloader(price_data, data, savepath, template, yearnumber, versionnumber, tax_profile, config, currency="CAD"):
     if template is None:
         template = config.get('template')
 
@@ -158,15 +158,27 @@ def generate_bulkloader(price_data, savepath, template, yearnumber, versionnumbe
     for s in config.get('sheets'):
         ws_new = wb.copy_worksheet(ws)
         ws_new.title = "{}".format(s.get('name'))
-    wb.remove_sheet(ws)
+    wb.remove(ws)
+
     if 'Sheet1' in wb.sheetnames:
         ws = wb['Sheet1']
-        wb.remove_sheet(ws)
+        wb.remove(ws)
     
     for row in price_data:
+        # add in the marketingnames if needed...
+        p = data.get('marketingnames', {}).get(row.get('packageid'))
+        if not p.get('packagecode'):
+            continue
+
         row_idx += 1 
         #if row_idx > 30:
         #    break
+
+        # augment the data...
+        row['packagetitle'] = p.get('packagetitle')
+        row['packagebrand'] = p.get('packagebrand')
+        row['packagecode'] = p.get('packagecode')
+        row['packagecat'] = p.get('packagecat')
 
         for s in config.get('sheets',{}):
             ws = wb[s.get('name')]
@@ -188,6 +200,10 @@ def generate_bulkloader(price_data, savepath, template, yearnumber, versionnumbe
                 if key_name in field:
                     cSide = style_sides[field[key_name]]
                     ws[coord].border = Border(left=cSide , right=cSide, top=cSide, bottom=cSide)
+                    
+                key_name = 'number_format'
+                if key_name in field:
+                    ws[coord].number_format = field.get('number_format')
                     
                 # condition is a check for NONE in the specified field is none skip that record...
                 clear_cell = False

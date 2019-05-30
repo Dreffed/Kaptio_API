@@ -79,9 +79,25 @@ def get_marketingnames(config, data, kt, savepath):
     logger.debug(resp)
 
     names = {}
+    
     for r in resp.get('records', []):
-        logger.debug(r)
-        names[r.get('Id')] = r
+        item = {
+            'packageid': r.get('ID'), 
+            'packagename': r.get('Name'), 
+            'packagetitle': r.get('KaptioTravel__ExternalName__c'), 
+            'packagecat': r.get('KaptioTravel__Category__c'), 
+            'packagecode': r.get('ProductCode__c'), 
+
+            'packagetypeid': r.get('recordtypeid'), 
+            'packagesup': r.get('SupplementaryName__c'),
+            'packagecats': r.get('MultiCategory__c'),
+            'packagefamily': r.get('FamilyName__c'), 
+            'packagemcat': r.get('MarketingCategory__c'), 
+            'packagemfam': r.get('MarketingFamilyName__c'),
+            'packagebrand': r.get('BrandName__c'), 
+            'packagebrandshrt': r.get('BrandShortName__c')            
+        }
+        names[r.get('Id')] = item
 
     data['marketingnames'] = names
     return data   
@@ -99,21 +115,20 @@ def filter_packages(config, data, kt, savepath):
         m = data.get('marketingnames', {}).get(p_id)
         if m:
             matched += 1
-            if m.get('ProductCode__c'):
+            if m.get('packagecode'):
                 pcode += 1
                 row = {
                     'packageid': p_id,
-                    'packagename': m.get('ProductCode__c'),
-                    'packagetitle': m.get('KaptioTravel__ExternalName__c'),
-                    'packagecode': m.get('ProductCode__c'),
-                    'packagecat': m.get('KaptioTravel__Category__c'),
-                    'packagebrand': m.get('MarketingFamilyName__c'),
-                    'packagesort': '{} - {} {}'.format(m.get('KaptioTravel__Category__c'), m.get('KaptioTravel__ExternalName__c'), m.get('ProductCode__c'))
+                    'packagename': m.get('packagename'),
+                    'packagetitle': m.get('packagetitle'),
+                    'packagecode': m.get('packagecode'),
+                    'packagecat': m.get('packagecat'),
+                    'packagebrand': m.get('packagebrand'),
+                    'packagesort': '{} - {} {}'.format(m.get('packagecat'), m.get('packagetitle'), m.get('packagecode'))
                 }
                 names.append(row)
+
     data['menu'] = sorted(names, key = lambda k:k['packagesort'])
-    for m in data.get('menu',[]):
-        logger.info(m)
 
     logger.info("Matched {} pacakges, using {}".format(matched, pcode))
     return data

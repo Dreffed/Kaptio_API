@@ -113,6 +113,7 @@ def process_bulkloader(config, data, kt, savepath):
 
         generate_bulkloader(
                 price_data=data.get('price_data', {}).get(t_key,[]), 
+                data=data,
                 savepath=savepath, 
                 template=None, 
                 yearnumber=season_year, 

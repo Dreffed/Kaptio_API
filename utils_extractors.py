@@ -205,7 +205,7 @@ def get_services(content):
         for info in content.get('packageinformation', []):
             if info.get('packageinfo_category', '') == 'Description':
                 text = info.get('packageinfo_text', None)
-                dayid = info.get('pacakgeinfo_packageday', None)
+                dayid = info.get('packageinfo_packageday', None)
                 if dayid and text:
                     if not dayid in events:
                         events[dayid] = []

@@ -41,6 +41,9 @@ def load_metadata(config, data, kt, savepath):
     return data
 
 def update_taxprofiles(config, data, kt, savepath):
+    if not data:
+        data = {}
+        
     q = "SELECT ID, sfxId__c, Name, currencyIsoCode FROM KaptioTravel__TaxProfile__c"
 
     kt = get_ograph(config, savepath)
@@ -57,6 +60,62 @@ def update_taxprofiles(config, data, kt, savepath):
                     logger.info("Updating tax profile id: {}: {} => {}".format(t_key, t_value, r.get('Id')))
                     data['tax_profiles'][t_key] = r.get('Id')
 
+    return data
+
+def get_marketingnames(config, data, kt, savepath):
+    if not data:
+        data = {}
+        
+    q = """SELECT 
+        recordtypeid, ID, Name, KaptioTravel__ExternalName__c, SupplementaryName__c,
+        ProductCode__c, PromotionType__c, MultiCategory__c,
+        FamilyName__c, MarketingCategory__c, MarketingFamilyName__c,
+        BrandName__c, BrandShortName__c, KaptioTravel__Category__c, KaptioTravel__Description__c
+    FROM
+        KaptioTravel__Package__c
+     """
+    kt = get_ograph(config, savepath)
+    resp = kt.process_query(q)
+    logger.debug(resp)
+
+    names = {}
+    for r in resp.get('records', []):
+        logger.debug(r)
+        names[r.get('Id')] = r
+
+    data['marketingnames'] = names
+    return data   
+
+def filter_packages(config, data, kt, savepath):
+    if not data:
+        data = {} 
+
+    matched = 0
+    pcode = 0
+    names = []
+
+    for p in data.get('packages', {}):
+        p_id = p.get('id')
+        m = data.get('marketingnames', {}).get(p_id)
+        if m:
+            matched += 1
+            if m.get('ProductCode__c'):
+                pcode += 1
+                row = {
+                    'packageid': p_id,
+                    'packagename': m.get('ProductCode__c'),
+                    'packagetitle': m.get('KaptioTravel__ExternalName__c'),
+                    'packagecode': m.get('ProductCode__c'),
+                    'packagecat': m.get('KaptioTravel__Category__c'),
+                    'packagebrand': m.get('MarketingFamilyName__c'),
+                    'packagesort': '{} - {} {}'.format(m.get('KaptioTravel__Category__c'), m.get('KaptioTravel__ExternalName__c'), m.get('ProductCode__c'))
+                }
+                names.append(row)
+    data['menu'] = sorted(names, key = lambda k:k['packagesort'])
+    for m in data.get('menu',[]):
+        logger.info(m)
+
+    logger.info("Matched {} pacakges, using {}".format(matched, pcode))
     return data
 
 def clear_data(config, data, kt, savepath):

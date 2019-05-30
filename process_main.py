@@ -10,7 +10,8 @@ from utils_processors import (
         save_data, backup_data, load_metadata, init_partial, update_taxprofiles,
         promote_custom, process_dates, process_prices, 
         process_packages, clear_data, process_content,
-        process_items, augment_pricelists, get_ktapi, get_ograph
+        process_items, augment_pricelists, get_ktapi, get_ograph, 
+        get_marketingnames, filter_packages
     )
 from utils_parallel import process_price_parallel
 from utils_output import (
@@ -76,6 +77,8 @@ def main():
         'metadata': load_metadata,
         'tax_profiles': update_taxprofiles,
         'packages': process_packages,
+        'marketing': get_marketingnames,
+        'filter_packages': filter_packages,
         'custom': promote_custom,
         'dates': process_dates,
         'prices': process_prices,

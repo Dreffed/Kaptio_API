@@ -195,6 +195,23 @@ def process_packages(config, data, kt, savepath):
 
     return data
 
+def augment_packages(config, data, kt, savepath):
+    if not data:
+        data = {}
+
+    if not 'packages' in data:
+        data['packages'] = {}
+
+    data['packagefull'] = {}
+
+    for p in data.get('packages', []):
+        if not p.get('record_type_name') == 'Package':
+            continue
+
+        data['packagefull'][p.get('id')] = kt.get_package(savepath, p.get('id'))
+
+    return data
+
 def promote_custom(config, data, kt, savepath):
     if not data:
         data = {}

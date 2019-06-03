@@ -11,7 +11,7 @@ from utils_processors import (
         promote_custom, process_dates, process_prices, 
         process_packages, clear_data, process_content,
         process_items, augment_pricelists, get_ktapi, get_ograph, 
-        get_marketingnames, filter_packages
+        get_marketingnames, filter_packages, augment_packages
     )
 from utils_parallel import process_price_parallel
 from utils_output import (
@@ -79,6 +79,7 @@ def main():
         'packages': process_packages,
         'marketing': get_marketingnames,
         'filter_packages': filter_packages,
+        'augment_packages': augment_packages,
         'custom': promote_custom,
         'dates': process_dates,
         'prices': process_prices,

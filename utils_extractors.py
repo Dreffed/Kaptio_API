@@ -201,15 +201,17 @@ def get_services(content):
                 days.append(day)
     
     events = {}
+    logger.info(days)
     if 'packageinformation' in content:
         for info in content.get('packageinformation', []):
             if info.get('packageinfo_category', '') == 'Description':
                 text = info.get('packageinfo_text', None)
-                dayid = info.get('packageinfo_packageday', None)
+                dayid = info.get('pacakgeinfo_packageday', None)
                 if dayid and text:
                     if not dayid in events:
                         events[dayid] = []
                     events[dayid].append(text)
+    logger.info(events)
 
     for d in days:
         dayid = d.get('dayid', '')
@@ -219,6 +221,7 @@ def get_services(content):
         for event in events.get(dayid, []):
             data[daynum].append(event)
 
+    logger.info(data)
     return data
 
 def get_web(content):

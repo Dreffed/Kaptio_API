@@ -144,7 +144,6 @@ def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_
         for d in p.get('package_departures', []):
             dd = SubElement(xml_dates, 'date', departureid=d.get('date','').replace('-',''))
             dd.text = str(d.get('date'))
-        pprint(xml_dates)
 
         #web_intin = {}
         svc_itin = {}
@@ -176,6 +175,7 @@ def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_
             c_day = 0
             c_seq = 0
             for s_key, s_value in svc_itin.items():
+                logger.info('\t{}'.format(s_value))
                 if c_day != int(s_key):
                     c_day = int(s_key)
                     c_seq = 0

@@ -196,7 +196,7 @@ def get_services(content):
         if isinstance(content['packagedays'], list):
             for item in content['packagedays']:
                 day = {}
-                day['num'] = str(item.get('packageday_index',0))
+                day['num'] = str(int(item.get('packageday_index',0)))
                 day['dayid'] = item.get('packageday_id', None)
                 days.append(day)
     
@@ -225,8 +225,11 @@ def get_web(content):
     data = []
     if 'packagedays' in content:
         if isinstance(content['packagedays'], list):
+            idx = 0
             for item in content['packagedays']:
+                idx += 1
                 day = {}
+                day['index'] = idx
                 day['num'] = item.get('packageday_index',0)
                 day['Breakfast'] = False
                 day['Lunch'] = False
@@ -292,7 +295,7 @@ def get_farebase(pricelist, tax_profile, packageid, service_level_id):
                                 fareBasis[o_key][d_key] = p_item.get('total_price').copy()
 
 
-    logger.info("\tEntries: {}\n\tErrors: {}".format(entry_count, error_count))
+    logger.debug("\tEntries: {}\n\tErrors: {}".format(entry_count, error_count))
         
     data = {}
     for f_key, f_value in fareBasis.items():

@@ -160,15 +160,15 @@ def process_xml(config, data, kt, savepath):
     departure_types = [
             'Anyday', 'Seasonal', 'Fixed'
         ] 
-    kt_packages = data.get("packages", [])
+    kt_packages = data.get('packagefull',{})
     kt_pricelist = data.get('pricelist', {})
 
     for t_key in data.get('tax_profiles', {}).keys():
         logger.info("generating XML for {} {}\n\tPackages: {}\n\tPricelists: {}".format(t_key, currency, len(kt_packages), len(kt_pricelist)))
 
         generate_xml(
-                packages=data.get('packages', []),
-                pricelist=data.get('pricelist', {}), 
+                packages=kt_packages,
+                pricelist=kt_pricelist, 
                 content=kt_pcontent,
                 departure_types=departure_types, 
                 yearnumber=season_year, 

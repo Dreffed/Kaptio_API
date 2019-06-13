@@ -130,7 +130,7 @@ def filter_packages(config, data, kt, savepath):
 
     data['menu'] = sorted(names, key = lambda k:k['packagesort'])
 
-    logger.info("Matched {} pacakges, using {}".format(matched, pcode))
+    logger.info("Matched {} packages, using {}".format(matched, pcode))
     return data
 
 def clear_data(config, data, kt, savepath):

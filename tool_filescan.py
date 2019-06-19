@@ -66,26 +66,71 @@ def scanfolders(data):
 
     return data
 
-def main(do_scan=None, do_export=None, do_stats=None):
+def exportfiles(data):
+    filelist = data.get('files', [])
+    if len(filelist) == 0:
+        logger.info('No files to export')
+        return data
+
+    fieldnames = filelist[0].keys()
+
+    with open('filelist.csv', 'w', newline='', encoding="utf-8") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(filelist)
+
+def processfilelist(data):
+    if not data:
+        data = {}
+
+    filelist = data.get('files', [])
+    extlist = data.get('extensions', {})
+    keywords = data.get('words', {})
+
+    if len(filelist) > 0 and not 'ext' in filelist[0]:
+        for f in filelist:
+            filename, ext = os.path.splitext(f.get('file'))
+            f['ext'] = ext
+            f['filename'] = filename
+
+            filepath = os.path.join(f.get('folder'), f.get('file'))
+            if not ext in extlist:
+                extlist[ext] = []
+            extlist[ext].append(filepath)
+
+    data['extensions'] = extlist
+    return data
+
+def main(processlist):
     picklename = 'filelist.pickle'
     data = get_pickle_data(picklename)
 
-    if do_scan:
-        data = scanfolders(data)
+    processmap = buildprocessmap()
 
-    if do_stats:
-        data = scanstats(data)
-        
-    if do_export:
-        filelist = data.get('files', [])
-        if len(filelist) > 0:
-            fieldnames = ['folder', 'file', 'size', 'modified', 'accessed']
-            with open('filelist.csv', 'w', newline='', encoding="utf-8") as csvfile:
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                writer.writeheader()
-                writer.writerows(filelist)
+    for p in processlist:
+        proc = processmap.get(p)
+        if proc:
+            logger.info('Running {}'.format(p))
+            data = proc(data)
 
     save_pickle_data(data=data, pickleName=picklename)
 
+def buildprocessmap():
+    processmap = {
+        'scan': scanfolders,
+        'process': processfilelist,
+        'stats': scanstats,
+        'export': exportfiles
+    }
+    return processmap
+
 if __name__ == '__main__':
-    main(do_export=True)
+    processlist = [
+        'scan',
+        'process',
+        'stats',
+        'export',
+        'null'
+    ]
+
+    main(processlist)

@@ -106,6 +106,7 @@ class KaptioClient:
     num_calls_per_second = 5
     max_retries = 3
     sleep_duration = 3
+    sleep_ratelimit = 30
 
     def __init__(self, baseurl, auth_key, auth_secret):
         assert(baseurl is not None)
@@ -137,6 +138,16 @@ class KaptioClient:
                     r = requests.post(thisurl, headers=self.headers, json=body)
                 
                 # check and handle Kaptio errors in these calls...    
+                if r.status_code != 200:
+                    if r.status_code == 429:
+                        self.logger.info('RATELIMIT: {} => {}'.format(r, r.text))
+                        sleep(self.sleep_ratelimit)
+                    else:
+                        self.logger.error("HTTP Exception! Retrying.....")
+                        self.logger.info('ERROR: {} => {}'.format(r, r.text))
+                        sleep(self.sleep_duration)
+                        retries += 1
+                    continue
                 
                 return r
             except:
@@ -162,10 +173,14 @@ class KaptioClient:
                     r = requests.post(thisurl, headers=self.headers, json=body)
                 
                 if r.status_code != 200:
-                    self.logger.error("HTTP Exception! Retrying.....")
-                    self.logger.info('ERROR: {} => {}'.format(r, r.text))
-                    sleep(self.sleep_duration)
-                    retries += 1
+                    if r.status_code == 429:
+                        self.logger.info('RATELIMIT: {} => {}'.format(r, r.text))
+                        sleep(self.sleep_ratelimit)
+                    else:
+                        self.logger.error("HTTP Exception! Retrying.....")
+                        self.logger.info('ERROR: {} => {}'.format(r, r.text))
+                        sleep(self.sleep_duration)
+                        retries += 1
                     continue
             
                 json_data = json.loads(r.text)

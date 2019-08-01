@@ -57,7 +57,7 @@ def scanfiles(folder, filter = None):
 
             m_data = None
             if filter is not None:
-                if not isinstance(filter, re.Pattern):
+                if isinstance(filter, str):
                     filter = re.compile(filter)
                 m = re.search(filter, filename)
                 if not m:

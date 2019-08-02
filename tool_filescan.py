@@ -75,7 +75,7 @@ def exportfiles(data):
     fieldnames = filelist[0].keys()
 
     with open('filelist.csv', 'w', newline='', encoding="utf-8") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore')
         writer.writeheader()
         writer.writerows(filelist)
 

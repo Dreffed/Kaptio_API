@@ -41,6 +41,8 @@ def main():
         logging.config.dictConfig(config.get('logger', {}))
     except:
         logging.basicConfig(level=logging.INFO)
+        logger.error("Unable to load the logging config, default to terminal!")
+        
     config["paths"] = PATHS
 
     run_data = {

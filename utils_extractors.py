@@ -116,20 +116,27 @@ def get_pricedata(data, rows, tax_profile):
                                         if 'total_price' in item:
                                             t = item.get('total_price')
                                             r = {}
+                                            r['factor'] = factor
                                             r['service_level_id'] = item.get('service_level_id')
                                             r['service_level'] = service_levels.get(item.get('service_level_id'))
                                             r['tax_profile'] = t_key
                                             r["net"] = t.get('net')
                                             try:
                                                 r['sales'] = float(t.get('sales'))
-                                                r['unitprice'] = float(r['sales']) / factor
+                                                r['unitprice'] = float(r.get('sales', 0.0)) / factor
                                             except:
                                                 r['sales'] = t.get('sales')
-                                                r['unitprice'] = r['sales']
+                                                r['unitprice'] = None
 
                                             r['net_discount'] = t.get('net_discount')
                                             r['sales_discount'] = t.get('sales_discount')
-                                            r['tax'] = t.get('tax')
+                                            try:
+                                                r['tax'] = float(t.get('tax'))
+                                                r['unittax'] = float(r.get('tax',0.0)) / factor
+                                            except:
+                                                r['tax'] = t.get('tax')
+                                                r['unittax'] = None
+
                                             r['currency'] = t.get('currency')
                                             r['supplier_price'] = t.get('supplier_price')
                                             r = {**r}

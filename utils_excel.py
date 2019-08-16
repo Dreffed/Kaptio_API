@@ -232,6 +232,8 @@ def generate_bulkloader(price_data, data, savepath, template, yearnumber, versio
                         t[f] = num(row.get(f,s.get('parameters',{}).get(f)))
                     logger.debug("params: {}".format(t))
                     ws[coord].value = fn(**t)
+                    if ws[coord].value == 0:
+                        ws[coord].value = 'u/a'
                             
                 elif 'formula' in field:
                     formula = field['formula']

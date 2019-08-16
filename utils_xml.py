@@ -12,9 +12,16 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_profile, savepath, currency="CAD"):
+def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_profile, savepath, currency="CAD", variation="night"):
     xml_root = Element('RockyMountaineer')
     xml_products = SubElement(xml_root, 'products', bookingType=tax_profile, date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+    factor_lookup = {
+        "single":1.0,
+        "double":2.0,
+        "triple":3.0,
+        "quad":4.0
+    }
 
     package_count = 0
     for p in packages:
@@ -51,9 +58,11 @@ def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_
             p_fields['packageType'] = departure_types[packagetypeid]
         except:
             p_fields['packageType'] = departure_types[2]
+        if variation.lower() == 'night':
+            p_fields['duration'] = str(p.get('length'))
+        else:
+            p_fields['duration'] = str(p.get('length') + 1)
 
-        p_fields['duration'] = str(p.get('length'))
-        
         p_fields['departureCity'] = ''
         p_fields['destinationCity'] = ''
 
@@ -141,6 +150,7 @@ def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_
                 # process this dat dict...
                 for o_key, o_value in season_prices.items():
                     xml_basis = SubElement(xml_bases, "fareBasis", type=str(o_key))
+                    factor = factor_lookup.get(o_key,1)
                     for s_key, s_value in o_value.items():
                         xml_prices = SubElement(xml_basis, "prices", alt="0.00")
                         xml_prices.attrib['from'] = str(s_value['@from'])
@@ -150,11 +160,19 @@ def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_
                         #pr = s_value.get('prices').copy()
 
                         x_p = SubElement(xml_adult, 'price')
-                        x_p.text = str(s_value['prices']['sales'])
-
                         x_t = SubElement(xml_adult, 'tax')
-                        x_t.text = str(s_value['prices']['tax'])
-                    
+
+                        if variation.lower() == 'night':
+                            x_p.text = str(s_value['prices']['sales'])    
+                            x_t.text = str(s_value['prices']['tax'])
+                        else:
+                            try:
+                                x_p.text = str(s_value['prices']['sales'] / factor)    
+                                x_t.text = str(s_value['prices']['tax'] / factor)
+                            else:
+                                x_p.text = ''
+                                x_t.text = ''
+                                            
                     xml_basis.append(xml_svc)
 
     logger.info("{} exported".format(package_count))

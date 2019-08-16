@@ -1,7 +1,6 @@
 import string
 import pickle
 import os
-import path
 import json
 from decimal import Decimal
 from time import time

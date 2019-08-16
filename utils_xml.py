@@ -169,7 +169,7 @@ def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_
                             try:
                                 x_p.text = str(s_value['prices']['sales'] / factor)    
                                 x_t.text = str(s_value['prices']['tax'] / factor)
-                            else:
+                            except:
                                 x_p.text = ''
                                 x_t.text = ''
                                             

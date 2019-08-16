@@ -296,9 +296,11 @@ def process_prices(config, data, kt, savepath):
             if not reload:
                 continue
         
-        if not p_value.get('active'):        
-            continue        
         p_key = p_value.get('id')
+        if not p_value.get('active'):        
+            if not p_key in config.get('packages',[]):        
+                continue
+            logger.info('\tIncluding deactive package {}'.format(p_key))
 
         dates = []
         for d in p_value.get('dates', []):

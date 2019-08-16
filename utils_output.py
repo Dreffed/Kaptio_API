@@ -81,7 +81,7 @@ def process_pricedata(config, data, kt, savepath):
             logger.info('Saveing Data : {}'.format(file_name))
             
             with open(file_name, 'w', newline='') as csvfile:
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore')
                 writer.writeheader()
                 writer.writerows(price_rows)
 

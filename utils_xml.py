@@ -3,7 +3,7 @@ from ElementTree_pretty import prettify
 from utils_extractors import get_web, get_highlights, get_services, get_farebase
 from pprint import pprint
 import logging
-from os import path
+from os import path 
 from time import time
 from datetime import datetime
 import json
@@ -175,7 +175,7 @@ def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_
             c_day = 0
             c_seq = 0
             for s_key, s_value in svc_itin.items():
-                logger.info('\t{}'.format(s_value))
+                #logger.info('\t{}'.format(s_value))
                 if c_day != int(s_key):
                     c_day = int(s_key)
                     c_seq = 0

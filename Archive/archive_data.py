@@ -3,7 +3,7 @@ import json
 import pickle
 import os
 import shutil
-import path
+
 from time import time
 from datetime import datetime
 import logging

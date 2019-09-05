@@ -1,7 +1,7 @@
 import string
 import pickle
 import os
-import path
+
 import json
 from decimal import Decimal
 from time import time
@@ -201,7 +201,7 @@ def get_services(content):
                 days.append(day)
     
     events = {}
-    logger.info(days)
+    #logger.info(days)
     if 'packageinformation' in content:
         for info in content.get('packageinformation', []):
             if info.get('packageinfo_category', '') == 'Description':
@@ -211,7 +211,7 @@ def get_services(content):
                     if not dayid in events:
                         events[dayid] = []
                     events[dayid].append(text)
-    logger.info(events)
+    #logger.info(events)
 
     for d in days:
         dayid = d.get('dayid', '')
@@ -221,7 +221,7 @@ def get_services(content):
         for event in events.get(dayid, []):
             data[daynum].append(event)
 
-    logger.info(data)
+    #logger.info(data)
     return data
 
 def get_web(content):

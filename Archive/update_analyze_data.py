@@ -3,7 +3,7 @@ from utils import get_pickle_data, save_pickle_data, save_json, scanfiles, scan_
 import json
 import pickle
 import os
-import path
+
 from time import time
 from datetime import datetime
 import socket

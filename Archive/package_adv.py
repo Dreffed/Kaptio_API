@@ -3,7 +3,7 @@ from utils import get_pickle_data, save_pickle_data, save_json, scanfiles
 import json
 import pickle
 import os
-import path
+
 import pandas as pd
 import requests
 from time import time

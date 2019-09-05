@@ -131,12 +131,12 @@ if len(kt_1020) > 0:
 
 if len(kt_1040) > 0:
     with open('product_launch_1040.csv', 'w', newline='') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore')
         writer.writeheader()
         writer.writerows(kt_1040)
 
 if len(kt_error) > 0:
     with open('product_launch_errors.csv', 'w', newline='') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore')
         writer.writeheader()
         writer.writerows(kt_error)

@@ -79,8 +79,10 @@ kt_pricelist = data['pricelist']
 packagerows = []
 for p in kt_packages:
     row = {}
-    if p['active'] != True:
-        continue
+    if p.get('active') != True:
+        if p.get('id') not in config.get('packages',[]):  
+            continue
+        logger.info('\t==> including {}'.format(p.get('name')))
 
     row['packageid'] = p['id']
     row['packagename'] = p['name']

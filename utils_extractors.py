@@ -202,20 +202,22 @@ def get_services(content):
         if isinstance(content['packagedays'], list):
             for item in content['packagedays']:
                 day = {}
-                day['num'] = str(item.get('packageday_index',0))
+                day['num'] = str(int(item.get('packageday_index',0)))
                 day['dayid'] = item.get('packageday_id', None)
                 days.append(day)
     
     events = {}
+    #logger.info(days)
     if 'packageinformation' in content:
         for info in content.get('packageinformation', []):
             if info.get('packageinfo_category', '') == 'Description':
                 text = info.get('packageinfo_text', None)
-                dayid = info.get('packageinfo_packageday', None)
+                dayid = info.get('pacakgeinfo_packageday', None)
                 if dayid and text:
                     if not dayid in events:
                         events[dayid] = []
                     events[dayid].append(text)
+    #logger.info(events)
 
     for d in days:
         dayid = d.get('dayid', '')
@@ -225,14 +227,18 @@ def get_services(content):
         for event in events.get(dayid, []):
             data[daynum].append(event)
 
+    #logger.info(data)
     return data
 
 def get_web(content):
     data = []
     if 'packagedays' in content:
         if isinstance(content['packagedays'], list):
+            idx = 0
             for item in content['packagedays']:
+                idx += 1
                 day = {}
+                day['index'] = idx
                 day['num'] = item.get('packageday_index',0)
                 day['Breakfast'] = False
                 day['Lunch'] = False
@@ -298,7 +304,7 @@ def get_farebase(pricelist, tax_profile, packageid, service_level_id):
                                 fareBasis[o_key][d_key] = p_item.get('total_price').copy()
 
 
-    logger.info("\tEntries: {}\n\tErrors: {}".format(entry_count, error_count))
+    logger.debug("\tEntries: {}\n\tErrors: {}".format(entry_count, error_count))
         
     data = {}
     for f_key, f_value in fareBasis.items():

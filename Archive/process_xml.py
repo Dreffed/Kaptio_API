@@ -5,7 +5,7 @@ from utils import get_pickle_data, save_pickle_data, save_json, scanfiles, load_
 from utils_dict import extract_rows
 from xml_utilities import get_farebase
 from content_utils import get_web, get_svc, get_hgh
-from os import path
+from os import path 
 from time import time
 from datetime import datetime
 from xml.etree.ElementTree import ElementTree, Element, SubElement, Comment, tostring

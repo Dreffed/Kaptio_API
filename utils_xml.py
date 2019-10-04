@@ -1,8 +1,9 @@
 from xml.etree.ElementTree import ElementTree, Element, SubElement, Comment, tostring
 from ElementTree_pretty import prettify
 from utils_extractors import get_web, get_highlights, get_services, get_farebase
+from pprint import pprint
 import logging
-from os import path
+from os import path 
 from time import time
 from datetime import datetime
 import json
@@ -12,7 +13,14 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_profile, savepath, currency="CAD", variation="night"):
+def printRecur(root, indent=0):
+    """Recursively prints the tree."""
+    print(' '*indent + '%s: %s' % (root.tag.title(), root.attrib.get('name', root.text)))
+    indent += 4
+    for elem in root.getchildren():
+        printRecur(elem, indent)
+
+def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_profile, savepath, currency="CAD"):
     xml_root = Element('RockyMountaineer')
     xml_products = SubElement(xml_root, 'products', bookingType=tax_profile, date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
@@ -24,7 +32,7 @@ def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_
     }
 
     package_count = 0
-    for p in packages:
+    for p_k, p in packages.items():
         if not p['active']:
             continue
 
@@ -39,12 +47,11 @@ def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_
         }
 
         # get the core fields...
-        packageid = p.get('id')
+        packageid = p_k
+
         logger.debug('=== {} ==='.format(packageid))
 
-        p_attrib['code'] = p.get('product_code')
-        if not p_attrib.get('code'):
-            p_attrib['code'] = p.get('custom_fields', {}).get('product_code')
+        p_attrib['code'] = p.get('product_code', p.get('custom_fields',{}).get('product_code'))
 
         xml_product = SubElement(xml_products, 'product',
                         code=str(p_attrib['code']), 
@@ -89,12 +96,63 @@ def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_
             if len(value) > 0:
                 se.text = str(value)
 
+        components = {}
+        for b in p.get('_bundles', []):
+            for c in b.get('components', []):
+                componentid = c.get('id')
+                c_row = {
+                    'id': componentid,
+                    'start_day': c.get('start_day'),
+                    'position': c.get('position'),
+                    'name': c.get('name'),
+                    'end_day': c.get('end_day'),
+                    'bundleid': c.get('bundle_options', {}).get('bundle_id'),
+                    'options': c.get('options')
+                }
+                if c.get('item_type'):
+                    c_row['item_id'] = c.get('item_type', {}).get('id')
+                    c_row['item_code'] =  c.get('item_type', {}).get('code')      
+                components[componentid] = c_row            
+
+        for c in p.get('components', []):
+            componentid = c.get('id')
+            if componentid in components:
+                break
+
+            c_row = {
+                'id': componentid,
+                'start_day': c.get('start_day'),
+                'position' : c.get('position'),
+                'name' : c.get('name'),
+                'end_day' : c.get('end_day'),
+                'bundleid': c.get('bundle_options', {}).get('bundle_id'),
+                'options':c.get('options')
+            }
+            if c.get('item_type'):
+                c_row['item_id'] = c.get('item_type', {}).get('id')
+                c_row['item_code'] =  c.get('item_type', {}).get('code')                  
+            components[componentid] = c_row
+
+        logger.debug('Components {}'.format(len(components)))
+
+        # oivot the components to match the days
+        day_components = {}
+        for c_k, c_v in components.items():
+            d_str = '{}'.format(c_v.get('start_day'))
+            p_str = '{}'.format(c_v.get('position'))
+            if not d_str in day_components:
+                day_components[d_str] = {}
+            if not p_str in day_components.get(d_str, {}):
+                day_components[d_str][p_str] = []
+            day_components[d_str][p_str].append(c_k)
+
+        logger.debug('Days {}'.format(len(day_components)))
+
         # prepare the dates for later pruning to a child node
         xml_dates = Element("departureDates")
-        if p['dates']:
-            for d in p['dates']:
-                dd = SubElement(xml_dates, 'date', departureid=d.replace('-',''))
-                dd.text = d
+        for d in p.get('package_departures', []):
+            dd = SubElement(xml_dates, 'date', departureid=d.get('date','').replace('-',''))
+            dd.text = str(d.get('date'))
 
         #web_intin = {}
         svc_itin = {}
@@ -123,11 +181,33 @@ def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_
             
             # services
             xml_svc = Element('serviceItinerary')
+            c_day = 0
+            c_seq = 0
             for s_key, s_value in svc_itin.items():
-                xml_ele = SubElement(xml_svc, 'service', day=str(s_key), itemSequence=str(1), serviceSequence=str(1))
-                xml_t = SubElement(xml_ele, 'text', language='English')
-                xml_t.text = "<!CDATA[{}]]".format(s_value)
-                
+                #logger.info('\t{}'.format(s_value))
+                if c_day != int(s_key):
+                    c_day = int(s_key)
+                    c_seq = 0
+
+                for s_k, s_v in day_components.get('{}'.format(c_day), {}).items():
+                    for componentid in s_v:
+                        c_seq += 1
+                        xml_ele = SubElement(xml_svc, 'service', day=str(c_day), itemSequence=str(s_k), serviceSequence=str(c_seq))
+                        
+                        xml_name = SubElement(xml_ele,'name')
+                        xml_name.text = components.get(componentid,{}).get('name')
+                        
+                        xml_region = SubElement(xml_ele,'region')
+                        c_opts = components.get(componentid,{}).get('options',[])
+                        if len(c_opts) > 0:
+                            xml_region.text = c_opts[0].get('item',{}).get('destination_county')
+
+                        xml_type = SubElement(xml_ele,'type')
+                        xml_type.text = components.get(componentid,{}).get('item_code')
+
+                        xml_t = SubElement(xml_ele, 'text', language='English')
+                    xml_t.text = "<![CDATA[{}]]>".format(s_value)
+                    
             # highlights
             xml_hgh = SubElement(xml_product, 'highlights')
             for hh in highlights:
@@ -176,7 +256,12 @@ def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_
                     xml_basis.append(xml_svc)
 
     logger.info("{} exported".format(package_count))
+    #printRecur(xml_root)
 
     xml_file = path.join(savepath, 'output', 'webdata-{}-{}-formated.xml'.format(tax_profile.replace(' ', ''), currency)) 
-    with codecs.open(xml_file, 'w', encoding='utf8') as fp:
+    #xml_tree = ElementTree()
+    ##xml_tree._setroot(xml_root)
+    #xml_tree.write(xml_file)
+    with codecs.open(xml_file, 'w', encoding='utf8') as fp:#
         fp.write(prettify(xml_root))
+

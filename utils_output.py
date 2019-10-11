@@ -167,7 +167,8 @@ def process_xml(config, data, kt, savepath):
     kt_pricelist = data.get('pricelist', {})
 
     variation = config.get('flags',{}).get('variations',{}).get('xml','night')
-
+    logger.info("Running {} XML variation".format(variation))
+    
     for t_key in data.get('tax_profiles', {}).keys():
         logger.info("generating XML for {} {}\n\tPackages: {}\n\tPricelists: {}".format(t_key, currency, len(kt_packages), len(kt_pricelist)))
 

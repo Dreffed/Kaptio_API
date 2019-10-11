@@ -1,6 +1,7 @@
-from xml.etree.ElementTree import ElementTree, Element, SubElement, Comment, tostring
+from xml.etree.ElementTree import ElementTree, Element, SubElement, Comment, tostring, dump
 from ElementTree_pretty import prettify
 from utils_extractors import get_web, get_highlights, get_services, get_farebase
+from utils import save_json
 from pprint import pprint
 import logging
 from os import path 
@@ -20,7 +21,7 @@ def printRecur(root, indent=0):
     for elem in root.getchildren():
         printRecur(elem, indent)
 
-def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_profile, savepath, currency="CAD"):
+def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_profile, savepath, currency="CAD", variation="night"):
     xml_root = Element('RockyMountaineer')
     xml_products = SubElement(xml_root, 'products', bookingType=tax_profile, date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
@@ -226,6 +227,7 @@ def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_
             xml_bases = SubElement(xml_seat, "fareBases")
             if pricelist.get(packageid,{}).get('pricelist'):
                 season_prices = get_farebase(pricelist.get(packageid,{}).get('pricelist',{}), tax_profile, packageid, service_level_id)
+                save_json(file_path="{}_{}_{}.json".format(tax_profile, packageid, service_level_id), data=season_prices)
 
                 # process this dat dict...
                 for o_key, o_value in season_prices.items():
@@ -243,22 +245,22 @@ def generate_xml(packages, pricelist, content, departure_types, yearnumber, tax_
                         x_t = SubElement(xml_adult, 'tax')
 
                         if variation.lower() == 'night':
-                            x_p.text = str(s_value['prices']['sales'])    
-                            x_t.text = str(s_value['prices']['tax'])
+                            x_p.text = "{0:.2f}".format(float(s_value['prices']['sales']))
+                            x_t.text = "{0:.2f}".format(float(s_value['prices']['tax']))
                         else:
                             try:
-                                x_p.text = str(s_value['prices']['sales'] / factor)    
-                                x_t.text = str(s_value['prices']['tax'] / factor)
-                            except:
+                                x_p.text = "{0:.2f}".format(float(s_value['prices']['sales']) / factor)    
+                                x_t.text = "{0:.2f}".format(float(s_value['prices']['tax']) / factor)
+                            except Exception as ex:
                                 x_p.text = ''
                                 x_t.text = ''
-                                            
+
                     xml_basis.append(xml_svc)
 
     logger.info("{} exported".format(package_count))
     #printRecur(xml_root)
 
-    xml_file = path.join(savepath, 'output', 'webdata-{}-{}-formated.xml'.format(tax_profile.replace(' ', ''), currency)) 
+    xml_file = path.join(savepath, 'output', 'webdata-{}-{}-{}-formated.xml'.format(tax_profile.replace(' ', ''), currency, variation)) 
     #xml_tree = ElementTree()
     ##xml_tree._setroot(xml_root)
     #xml_tree.write(xml_file)
